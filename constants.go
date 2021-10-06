@@ -34,6 +34,10 @@ const (
 	apiGetAltSpeedLimitState  = "/api/v2/transfer/speedLimitsMode"
 	apiToggleAltSpeedLimits   = "/api/v2/transfer/toggleSpeedLimitsMode"
 	apiGetGlobalDownloadLimit = "/api/v2/transfer/downloadLimit"
+	apiSetGlobalDownloadLimit = "/api/v2/transfer/setDownloadLimit"
+	apiGetGlobalUploadLimit   = "/api/v2/transfer/uploadLimit"
+	apiSetGlobalUploadLimit   = "/api/v2/transfer/setUploadLimit"
+	apiBanPeers               = "/api/v2/transfer/banPeers"
 
 	//
 	apiGetTorrentList = "/api/v2/torrents/info"

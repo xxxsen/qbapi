@@ -393,3 +393,42 @@ type ToggleAlternativeSpeedLimitsReq struct {
 
 type ToggleAlternativeSpeedLimitsRsp struct {
 }
+
+type GetGlobalDownloadLimitReq struct {
+}
+
+type GetGlobalDownloadLimitRsp struct {
+	Speed int
+}
+
+type SetGlobalDownloadLimitReq struct {
+	Speed int `json:"limit"`
+}
+
+type SetGlobalDownloadLimitRsp struct {
+}
+
+type GetGlobalUploadLimitReq struct {
+}
+
+type GetGlobalUploadLimitRsp struct {
+	Speed int
+}
+
+type SetGlobalUploadLimitReq struct {
+	Speed int `json:"limit"`
+}
+
+type SetGlobalUploadLimitRsp struct {
+}
+
+type BanPeersReq struct {
+	Peers []string
+}
+
+type banPeersReqInner struct {
+	Peers string `json:"peers"`
+}
+
+type BanPeersRsp struct {
+}
