@@ -51,3 +51,19 @@ func RootCause(err error) (int, error) {
 	}
 	return e.RootCause()
 }
+
+type StatusCodeErr struct {
+	code int
+}
+
+func NewStatusCodeErr(code int) *StatusCodeErr {
+	return &StatusCodeErr{code: code}
+}
+
+func (s *StatusCodeErr) Code() int {
+	return s.code
+}
+
+func (s *StatusCodeErr) Error() string {
+	return fmt.Sprintf("StatusCodeErr:[code:%d]", s.code)
+}

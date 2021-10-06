@@ -39,7 +39,10 @@ func getAPI() *QBAPI {
 }
 
 func TestGetTorrentList(t *testing.T) {
-	rsp, err := testApi.GetTorrentList(context.Background(), &GetTorrentListReq{})
+	limit := 10
+	rsp, err := testApi.GetTorrentList(context.Background(), &GetTorrentListReq{
+		Limit: &limit,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

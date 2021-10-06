@@ -432,3 +432,355 @@ type banPeersReqInner struct {
 
 type BanPeersRsp struct {
 }
+
+type GetTorrentGenericPropertiesReq struct {
+	Hash string `json:"hash"`
+}
+
+type TorrentGenericProperty struct {
+	SavePath               string  `json:"save_path"`                //Torrent save path
+	CreationDate           int     `json:"creation_date"`            //Torrent creation date (Unix timestamp)
+	PieceSize              int     `json:"piece_size"`               //Torrent piece size (bytes)
+	Comment                string  `json:"comment"`                  //Torrent comment
+	TotalWasted            int     `json:"total_wasted"`             //Total data wasted for torrent (bytes)
+	TotalUploaded          int     `json:"total_uploaded"`           //Total data uploaded for torrent (bytes)
+	TotalUploadedSession   int     `json:"total_uploaded_session"`   //Total data uploaded this session (bytes)
+	TotalDownloaded        int     `json:"total_downloaded"`         //Total data downloaded for torrent (bytes)
+	TotalDownloadedSession int     `json:"total_downloaded_session"` //Total data downloaded this session (bytes)
+	UpLimit                int     `json:"up_limit"`                 //Torrent upload limit (bytes/s)
+	DlLimit                int     `json:"dl_limit"`                 //Torrent download limit (bytes/s)
+	TimeElapsed            int     `json:"time_elapsed"`             //Torrent elapsed time (seconds)
+	SeedingTime            int     `json:"seeding_time"`             //Torrent elapsed time while complete (seconds)
+	NbConnections          int     `json:"nb_connections"`           //Torrent connection count
+	NbConnectionsLimit     int     `json:"nb_connections_limit"`     //Torrent connection count limit
+	ShareRatio             float64 `json:"share_ratio"`              //Torrent share ratio
+	AdditionDate           int     `json:"addition_date"`            //When this torrent was added (unix timestamp)
+	CompletionDate         int     `json:"completion_date"`          //Torrent completion date (unix timestamp)
+	CreatedBy              string  `json:"created_by"`               //Torrent creator
+	DlSpeedAvg             int     `json:"dl_speed_avg"`             //Torrent average download speed (bytes/second)
+	DlSpeed                int     `json:"dl_speed"`                 //Torrent download speed (bytes/second)
+	Eta                    int     `json:"eta"`                      //Torrent ETA (seconds)
+	LastSeen               int     `json:"last_seen"`                //Last seen complete date (unix timestamp)
+	Peers                  int     `json:"peers"`                    //Number of peers connected to
+	PeersTotal             int     `json:"peers_total"`              //Number of peers in the swarm
+	PiecesHave             int     `json:"pieces_have"`              //Number of pieces owned
+	PiecesNum              int     `json:"pieces_num"`               //Number of pieces of the torrent
+	Reannounce             int     `json:"reannounce"`               //Number of seconds until the next announce
+	Seeds                  int     `json:"seeds"`                    //Number of seeds connected to
+	SeedsTotal             int     `json:"seeds_total"`              //Number of seeds in the swarm
+	TotalSize              int     `json:"total_size"`               //Torrent total size (bytes)
+	UpSpeedAvg             int     `json:"up_speed_avg"`             //Torrent average upload speed (bytes/second)
+	UpSpeed                int     `json:"up_speed"`                 //Torrent upload speed (bytes/second)
+}
+
+type GetTorrentGenericPropertiesRsp struct {
+	Exist    bool
+	Property *TorrentGenericProperty
+}
+
+type GetTorrentTrackersReq struct {
+	Hash string `json:"hash"`
+}
+
+type TorrentTrackerItem struct {
+	Url           string `json:"url"`            //Tracker url
+	Status        int    `json:"status"`         //Tracker status. See the table below for possible values
+	Tier          int    `json:"tier"`           //Tracker priority tier. Lower tier trackers are tried before higher tiers
+	NumPeers      int    `json:"num_peers"`      //Number of peers for current torrent, as reported by the tracker
+	NumSeeds      int    `json:"num_seeds"`      //Number of seeds for current torrent, asreported by the tracker
+	NumLeeches    int    `json:"num_leeches"`    //Number of leeches for current torrent, as reported by the tracker
+	NumDownloaded int    `json:"num_downloaded"` //Number of completed downlods for current torrent, as reported by the tracker
+	Msg           string `json:"msg"`            //Tracker message (there is no way of knowing what this message is - it's up to tracker admins)
+}
+
+type GetTorrentTrackersRsp struct {
+	Exist    bool
+	Trackers []*TorrentTrackerItem
+}
+
+type GetTorrentWebSeedsReq struct {
+	Hash string `json:"hash"`
+}
+
+type TorrentWebSeedItem struct {
+	Url string `json:"url"`
+}
+
+type GetTorrentWebSeedsRsp struct {
+	Exist    bool
+	WebSeeds []*TorrentWebSeedItem
+}
+
+type GetTorrentContentsReq struct {
+	Hash  string
+	Index []string
+}
+
+type getTorrentContentsInnerReq struct {
+	Hash    string  `json:"hash"`
+	Indexes *string `json:"indexes"`
+}
+
+type TorrentContentItem struct {
+	Index        string  `json:"index"`        //File index
+	Name         string  `json:"name"`         //File name (including relative path)
+	Size         int     `json:"size"`         //File size (bytes)
+	Progress     float64 `json:"progress"`     //File progress (percentage/100)
+	Priority     int     `json:"priority"`     //File priority. See possible values here below
+	IsSeed       bool    `json:"is_seed"`      //True if file is seeding/complete
+	PieceRange   []int   `json:"piece_range"`  //The first number is the starting piece index and the second number is the ending piece index (inclusive)
+	Availability float64 `json:"availability"` //Percentage of file pieces currently available (percentage/100)
+
+}
+type GetTorrentContentsRsp struct {
+	Exist    bool
+	Contents []*TorrentContentItem
+}
+
+type GetTorrentPiecesStatesReq struct {
+	Hash string `json:"hash"`
+}
+
+type GetTorrentPiecesStatesRsp struct {
+	Exist  bool
+	States []int
+}
+
+type GetTorrentPiecesHashesReq struct {
+}
+
+type GetTorrentPiecesHashesRsp struct {
+}
+
+type PauseTorrentsReq struct {
+}
+
+type PauseTorrentsRsp struct {
+}
+
+type ResumeTorrentsReq struct {
+}
+
+type ResumeTorrentsRsp struct {
+}
+
+type DeleteTorrentsReq struct {
+}
+
+type DeleteTorrentsRsp struct {
+}
+
+type RecheckTorrentsReq struct {
+}
+
+type RecheckTorrentsRsp struct {
+}
+
+type ReannounceTorrentsReq struct {
+}
+
+type ReannounceTorrentsRsp struct {
+}
+
+type AddNewTorrentReq struct {
+}
+
+type AddNewTorrentRsp struct {
+}
+
+type AddTrackersToTorrentReq struct {
+}
+
+type AddTrackersToTorrentRsp struct {
+}
+
+type EditTrackersReq struct {
+}
+
+type EditTrackersRsp struct {
+}
+
+type RemoveTrackersReq struct {
+}
+
+type RemoveTrackersRsp struct {
+}
+
+type AddPeersReq struct {
+}
+
+type AddPeersRsp struct {
+}
+
+type IncreaseTorrentPriorityReq struct {
+}
+
+type IncreaseTorrentPriorityRsp struct {
+}
+
+type DecreaseTorrentPriorityReq struct {
+}
+
+type DecreaseTorrentPriorityRsp struct {
+}
+
+type MaximalTorrentPriorityReq struct {
+}
+
+type MaximalTorrentPriorityRsp struct {
+}
+
+type MinimalTorrentPriorityReq struct {
+}
+
+type MinimalTorrentPriorityRsp struct {
+}
+
+type SetFilePriorityReq struct {
+}
+
+type SetFilePriorityRsp struct {
+}
+
+type GetTorrentDownloadLimitReq struct {
+}
+
+type GetTorrentDownloadLimitRsp struct {
+}
+
+type SetTorrentDownloadLimitReq struct {
+}
+
+type SetTorrentDownloadLimitRsp struct {
+}
+
+type SetTorrentShareLimitReq struct {
+}
+
+type SetTorrentShareLimitRsp struct {
+}
+
+type GetTorrentUploadLimitReq struct {
+}
+
+type GetTorrentUploadLimitRsp struct {
+}
+
+type SetTorrentUploadLimitReq struct {
+}
+
+type SetTorrentUploadLimitRsp struct {
+}
+
+type SetTorrentLocationReq struct {
+}
+
+type SetTorrentLocationRsp struct {
+}
+
+type SetTorrentNameReq struct {
+}
+
+type SetTorrentNameRsp struct {
+}
+
+type SetTorrentCategoryReq struct {
+}
+type SetTorrentCategoryRsp struct {
+}
+
+type GetAllCategoriesReq struct {
+}
+
+type GetAllCategoriesRsp struct {
+}
+
+type AddNewCategoryReq struct {
+}
+
+type AddNewCategoryRsp struct {
+}
+
+type EditCategoryReq struct {
+}
+
+type EditCategoryRsp struct {
+}
+
+type RemoveCategoriesReq struct {
+}
+
+type RemoveCategoriesRsp struct {
+}
+
+type AddTorrentTagsReq struct {
+}
+
+type AddTorrentTagsRsp struct {
+}
+
+type RemoveTorrentTagsReq struct {
+}
+
+type RemoveTorrentTagsRsp struct {
+}
+
+type GetAllTagsReq struct {
+}
+
+type GetAllTagsRsp struct {
+}
+
+type CreateTagsReq struct {
+}
+
+type CreateTagsRsp struct {
+}
+
+type DeleteTagsReq struct {
+}
+
+type DeleteTagsRsp struct {
+}
+
+type SetAutomaticTorrentManagementReq struct {
+}
+
+type SetAutomaticTorrentManagementRsp struct {
+}
+
+type ToggleSequentialDownloadReq struct {
+}
+
+type ToggleSequentialDownloadRsp struct {
+}
+
+type SetFirstOrLastPiecePriorityReq struct {
+}
+
+type SetFirstOrLastPiecePriorityRsp struct {
+}
+
+type SetForceStartReq struct {
+}
+
+type SetForceStartRsp struct {
+}
+
+type SetSuperSeedingReq struct {
+}
+
+type SetSuperSeedingRsp struct {
+}
+
+type RenameFileReq struct {
+}
+
+type RenameFileRsp struct {
+}
+
+type RenameFolderReq struct {
+}
+
+type RenameFolderRsp struct {
+}

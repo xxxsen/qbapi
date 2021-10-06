@@ -108,7 +108,7 @@ func (q *QBAPI) getWithDecoder(ctx context.Context, path string, req interface{}
 	}
 	defer httpRsp.Body.Close()
 	if httpRsp.StatusCode != http.StatusOK {
-		return NewError(ErrStatusCode, fmt.Errorf("code:%d", httpRsp.StatusCode))
+		return NewError(ErrStatusCode, NewStatusCodeErr(httpRsp.StatusCode))
 	}
 	if rsp == nil {
 		return nil
@@ -138,7 +138,7 @@ func (q *QBAPI) postWithDecoder(ctx context.Context, path string, req interface{
 	}
 	defer httpRsp.Body.Close()
 	if httpRsp.StatusCode != http.StatusOK {
-		return NewError(ErrStatusCode, fmt.Errorf("code:%d", httpRsp.StatusCode))
+		return NewError(ErrStatusCode, NewStatusCodeErr(httpRsp.StatusCode))
 	}
 	if rsp == nil {
 		return nil
@@ -272,8 +272,7 @@ func (q *QBAPI) GetTorrentPeerData(ctx context.Context, req *GetTorrentPeerDataR
 		rsp.Exist = true
 		return rsp, nil
 	}
-	code, err := RootCause(err)
-	if code == ErrStatusCode && strings.Contains(err.Error(), "404") {
+	if q.is404Err(err) {
 		return rsp, nil
 	}
 	return nil, err
@@ -365,4 +364,259 @@ func (q *QBAPI) GetTorrentList(ctx context.Context, req *GetTorrentListReq) (*Ge
 		return nil, err
 	}
 	return rsp, nil
+}
+
+func (q *QBAPI) GetTorrentGenericProperties(ctx context.Context, req *GetTorrentGenericPropertiesReq) (*GetTorrentGenericPropertiesRsp, error) {
+	rsp := &GetTorrentGenericPropertiesRsp{Property: &TorrentGenericProperty{}, Exist: true}
+	err := q.getWithDecoder(ctx, apiGetTorrentGenericProp, req, rsp.Property, JsonDec)
+	if err == nil {
+		return rsp, nil
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return nil, err
+}
+
+func (q *QBAPI) GetTorrentTrackers(ctx context.Context, req *GetTorrentTrackersReq) (*GetTorrentTrackersRsp, error) {
+	rsp := &GetTorrentTrackersRsp{Trackers: make([]*TorrentTrackerItem, 0), Exist: true}
+	err := q.getWithDecoder(ctx, apiGetTorrentTrackers, req, &rsp.Trackers, JsonDec)
+	if err == nil {
+		return rsp, nil
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return nil, err
+}
+
+func (q *QBAPI) is404Err(err error) bool {
+	code, err := RootCause(err)
+	if code != ErrStatusCode {
+		return false
+	}
+	errStatus, ok := err.(*StatusCodeErr)
+	if !ok {
+		return false
+	}
+	if errStatus.Code() != http.StatusNotFound {
+		return false
+	}
+	return true
+}
+
+func (q *QBAPI) GetTorrentWebSeeds(ctx context.Context, req *GetTorrentWebSeedsReq) (*GetTorrentWebSeedsRsp, error) {
+	rsp := &GetTorrentWebSeedsRsp{WebSeeds: make([]*TorrentWebSeedItem, 0), Exist: true}
+	err := q.getWithDecoder(ctx, apiGetTorrentWebSeeds, req, &rsp.WebSeeds, JsonDec)
+	if err == nil {
+		return rsp, nil
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return rsp, nil
+}
+
+func (q *QBAPI) GetTorrentContents(ctx context.Context, req *GetTorrentContentsReq) (*GetTorrentContentsRsp, error) {
+	rsp := &GetTorrentContentsRsp{Contents: make([]*TorrentContentItem, 0), Exist: true}
+
+	innerReq := &getTorrentContentsInnerReq{Hash: req.Hash}
+	if len(req.Index) > 0 {
+		indexes := strings.Join(req.Index, "|")
+		innerReq.Indexes = &indexes
+	}
+	err := q.getWithDecoder(ctx, apiGetTorrentContents, innerReq, rsp.Contents, JsonDec)
+	if err == nil {
+		return rsp, nil
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return nil, err
+}
+
+func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiecesStatesReq) (*GetTorrentPiecesStatesRsp, error) {
+	rsp := &GetTorrentPiecesStatesRsp{Exist: true, States: make([]int, 0)}
+	err := q.getWithDecoder(ctx, apiGetTorrentPiecesStates, req, rsp.States, JsonDec)
+	if err == nil {
+		return rsp, err
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return nil, err
+}
+
+func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiecesHashesReq) (*GetTorrentPiecesHashesRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*PauseTorrentsRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*ResumeTorrentsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*DeleteTorrentsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*RecheckTorrentsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) ReannounceTorrents(ctx context.Context, req *ReannounceTorrentsReq) (*ReannounceTorrentsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddNewTorrentRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorrentReq) (*AddTrackersToTorrentRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) EditTrackers(ctx context.Context, req *EditTrackersReq) (*EditTrackersRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) RemoveTrackers(ctx context.Context, req *RemoveTrackersReq) (*RemoveTrackersRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) AddPeers(ctx context.Context, req *AddPeersReq) (*AddPeersRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) IncreaseTorrentPriority(ctx context.Context, req *IncreaseTorrentPriorityReq) (*IncreaseTorrentPriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) DecreaseTorrentPriority(ctx context.Context, req *DecreaseTorrentPriorityReq) (*DecreaseTorrentPriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentPriorityReq) (*MaximalTorrentPriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) MinimalTorrentPriority(ctx context.Context, req *MinimalTorrentPriorityReq) (*MinimalTorrentPriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetFilePriority(ctx context.Context, req *SetFilePriorityReq) (*SetFilePriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDownloadLimitReq) (*GetTorrentDownloadLimitRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDownloadLimitReq) (*SetTorrentDownloadLimitRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLimitReq) (*SetTorrentShareLimitRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUploadLimitReq) (*GetTorrentUploadLimitRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentUploadLimit(ctx context.Context, req *SetTorrentUploadLimitReq) (*SetTorrentUploadLimitRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentLocation(ctx context.Context, req *SetTorrentLocationReq) (*SetTorrentLocationRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentName(ctx context.Context, req *SetTorrentNameReq) (*SetTorrentNameRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetTorrentCategory(ctx context.Context, req *SetTorrentCategoryReq) (*SetTorrentCategoryRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) GetAllCategories(ctx context.Context, req *GetAllCategoriesReq) (*GetAllCategoriesRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) AddNewCategory(ctx context.Context, req *AddNewCategoryReq) (*AddNewCategoryRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) EditCategory(ctx context.Context, req *EditCategoryReq) (*EditCategoryRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) (*RemoveCategoriesRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*AddTorrentTagsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq) (*RemoveTorrentTagsRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTagsRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTagsRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTagsRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutomaticTorrentManagementReq) (*SetAutomaticTorrentManagementRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequentialDownloadReq) (*ToggleSequentialDownloadRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOrLastPiecePriorityReq) (*SetFirstOrLastPiecePriorityRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetForceStartRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) SetSuperSeeding(ctx context.Context, req *SetSuperSeedingReq) (*SetSuperSeedingRsp, error) {
+	panic("impl")
+}
+
+func (q *QBAPI) RenameFile(ctx context.Context, req *RenameFileReq) (*RenameFileRsp, error) {
+	panic("impl")
+
+}
+
+func (q *QBAPI) RenameFolder(ctx context.Context, req *RenameFolderReq) (*RenameFolderRsp, error) {
+	panic("impl")
 }
