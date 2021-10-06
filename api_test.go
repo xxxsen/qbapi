@@ -117,3 +117,19 @@ func TestGetPeerHash(t *testing.T) {
 		t.Log("not found")
 	}
 }
+
+func TestGetAlternativeSpeedLimitsState(t *testing.T) {
+	rsp, err := testApi.GetAlternativeSpeedLimitsState(&GetAlternativeSpeedLimitsStateReq{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("data:%+v", rsp)
+}
+
+func TestToggleAlternativeSpeedLimits(t *testing.T) {
+	rsp, err := testApi.ToggleAlternativeSpeedLimits(&ToggleAlternativeSpeedLimitsReq{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("data:%+v", rsp)
+}

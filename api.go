@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
@@ -281,6 +282,41 @@ func (q *QBAPI) GetTorrentPeerData(req *GetTorrentPeerDataReq) (*GetTorrentPeerD
 		return rsp, nil
 	}
 	return nil, err
+}
+
+//GetGlobalTransferInfo /api/v2/transfer/info
+func (q *QBAPI) GetGlobalTransferInfo(req *GetGlobalTransferInfoReq) (*GetGlobalTransferInfoRsp, error) {
+	rsp := &GetGlobalTransferInfoRsp{Info: &GlobalTransferInfo{}}
+	if err := q.getWithDecoder(apiGetGlobalTransferInfo, req, rsp.Info, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetAlternativeSpeedLimitsState /api/v2/transfer/speedLimitsMode
+func (q *QBAPI) GetAlternativeSpeedLimitsState(req *GetAlternativeSpeedLimitsStateReq) (*GetAlternativeSpeedLimitsStateRsp, error) {
+	var strEnabled string
+	rsp := &GetAlternativeSpeedLimitsStateRsp{Enabled: true}
+	if err := q.getWithDecoder(apiGetAltSpeedLimitState, req, &strEnabled, StrDec); err != nil {
+		return nil, err
+	}
+	value, err := strconv.ParseInt(strEnabled, 10, 64)
+	if err != nil {
+		return nil, NewError(ErrUnmarsal, err)
+	}
+	if value == 0 {
+		rsp.Enabled = false
+	}
+	return rsp, nil
+}
+
+//ToggleAlternativeSpeedLimits /api/v2/transfer/toggleSpeedLimitsMode
+func (q *QBAPI) ToggleAlternativeSpeedLimits(req *ToggleAlternativeSpeedLimitsReq) (*ToggleAlternativeSpeedLimitsRsp, error) {
+	rsp := &ToggleAlternativeSpeedLimitsRsp{}
+	if err := q.postWithDecoder(apiToggleAltSpeedLimits, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
 }
 
 //GetTorrentList /api/v2/torrents/info

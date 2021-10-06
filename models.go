@@ -325,57 +325,13 @@ type GetMainDataRsp struct {
 	CategoriesRemoved []interface{}               `json:"categories_removed"` //List of categories removed since last request
 	Tags              []interface{}               `json:"tags"`               //List of tags added since last request
 	TagsRemoved       []interface{}               `json:"tags_removed"`       //List of tags removed since last request
-	ServerState       map[string]interface{}      `json:"server_state"`       //Global transfer info
+	ServerState       *GlobalTransferInfo         `json:"server_state"`       //Global transfer info
 }
 
 type GetTorrentPeerDataReq struct {
 	Hash string `json:"hash"`
 	Rid  int    `json:"rid"`
 }
-
-/*
-{
-	"full_update": true,
-	"peers": {
-		"121.144.134.56:31575": {
-			"client": "µTorrent 1.8.2",
-			"connection": "BT",
-			"country": "韩国 (大韩民国)",
-			"country_code": "kr",
-			"dl_speed": 19,
-			"downloaded": 192054,
-			"files": "KMHRS-044/KMHRS-044.mp4",
-			"flags": "D S H E",
-			"flags_desc": "D = interested(local) and unchoked(peer)\nS = peer snubbed\nH = peer from DHT\nE = encrypted traffic",
-			"ip": "121.144.134.56",
-			"port": 31575,
-			"progress": 1,
-			"relevance": 1,
-			"up_speed": 0,
-			"uploaded": 0
-		},
-		"171.106.16.130:31904": {
-			"client": "Tixati 2.81",
-			"connection": "μTP",
-			"country": "中国",
-			"country_code": "cn",
-			"dl_speed": 0,
-			"downloaded": 0,
-			"files": "",
-			"flags": "I X H E P",
-			"flags_desc": "I = incoming connection\nX = peer from PEX\nH = peer from DHT\nE = encrypted traffic\nP = μTP",
-			"ip": "171.106.16.130",
-			"port": 31904,
-			"progress": 0.7589343786239624,
-			"relevance": 0,
-			"up_speed": 0,
-			"uploaded": 71303168
-		}
-	},
-	"rid": 1,
-	"show_flags": true
-}
-*/
 
 type TorrentPeerItem struct {
 	Client      string  `json:"client"`
@@ -405,4 +361,35 @@ type TorrentPeerData struct {
 type GetTorrentPeerDataRsp struct {
 	Exist bool
 	Data  *TorrentPeerData
+}
+
+type GetGlobalTransferInfoReq struct {
+}
+
+type GlobalTransferInfo struct {
+	DlInfoSpeed      int    `json:"dl_info_speed"`     //Global download rate (bytes/s)
+	DlInfoData       int    `json:"dl_info_data"`      //Data downloaded this session (bytes)
+	UpInfoSpeed      int    `json:"up_info_speed"`     //Global upload rate (bytes/s)
+	UpInfoData       int    `json:"up_info_data"`      //Data uploaded this session (bytes)
+	DlRateLimit      int    `json:"dl_rate_limit"`     //Download rate limit (bytes/s)
+	UpRateLimit      int    `json:"up_rate_limit"`     //Upload rate limit (bytes/s)
+	DhtNodes         int    `json:"dht_nodes"`         //DHT nodes connected to
+	ConnectionStatus string `json:"connection_status"` //Connection status. See possible values here below
+}
+
+type GetGlobalTransferInfoRsp struct {
+	Info *GlobalTransferInfo
+}
+
+type GetAlternativeSpeedLimitsStateReq struct {
+}
+
+type GetAlternativeSpeedLimitsStateRsp struct {
+	Enabled bool
+}
+
+type ToggleAlternativeSpeedLimitsReq struct {
+}
+
+type ToggleAlternativeSpeedLimitsRsp struct {
 }
