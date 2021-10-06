@@ -1,6 +1,18 @@
 package qbapi
 
 const (
+	ErrOK         = 0
+	ErrParams     = -10000
+	ErrUnmarsal   = -10001
+	ErrMarsal     = -10002
+	ErrInternal   = -10003
+	ErrNetwork    = -10004
+	ErrStatusCode = -10005
+	ErrLogin      = -10006
+	ErrUnknown    = -10007
+)
+
+const (
 	//login
 	apiLogin = "/api/v2/auth/login"
 	//

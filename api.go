@@ -31,7 +31,7 @@ func NewAPI(opts ...Option) (*QBAPI, error) {
 		c.Host = strings.TrimRight(c.Host, "/")
 	}
 	if len(c.Host) == 0 || len(c.Username) == 0 || len(c.Password) == 0 {
-		return nil, fmt.Errorf("params err")
+		return nil, NewMsgError(ErrParams, "params err")
 	}
 	jar, err := cookiejar.New(&cookiejar.Options{PublicSuffixList: publicsuffix.List})
 	if err != nil {
@@ -51,7 +51,7 @@ func (q *QBAPI) get(path string, req map[string]string) (*http.Response, error) 
 	uri := q.buildURI(path)
 	httpReq, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, err
+		return nil, NewError(ErrInternal, err)
 	}
 	if len(req) != 0 {
 		query := httpReq.URL.Query()
@@ -63,7 +63,7 @@ func (q *QBAPI) get(path string, req map[string]string) (*http.Response, error) 
 
 	resp, err := q.client.Do(httpReq)
 	if err != nil {
-		return nil, err
+		return nil, NewError(ErrNetwork, err)
 	}
 	return resp, nil
 }
@@ -82,7 +82,7 @@ func (q *QBAPI) post(path string, values map[string]string) (*http.Response, err
 
 	req, err := http.NewRequest(http.MethodPost, uri, reader)
 	if err != nil {
-		return nil, err
+		return nil, NewError(ErrInternal, err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
@@ -111,17 +111,17 @@ func (q *QBAPI) getWithDecoder(path string, req interface{}, rsp interface{}, de
 	}
 	defer httpRsp.Body.Close()
 	if httpRsp.StatusCode != http.StatusOK {
-		return fmt.Errorf("code:%d", httpRsp.StatusCode)
+		return NewError(ErrStatusCode, fmt.Errorf("code:%d", httpRsp.StatusCode))
 	}
 	if rsp == nil {
 		return nil
 	}
 	data, err := ioutil.ReadAll(httpRsp.Body)
 	if err != nil {
-		return err
+		return NewError(ErrNetwork, err)
 	}
 	if err := decoder(data, rsp); err != nil {
-		return err
+		return NewError(ErrUnmarsal, err)
 	}
 	return nil
 }
@@ -138,7 +138,7 @@ func (q *QBAPI) postWithDecoder(path string, req interface{}, rsp interface{}, d
 	}
 	defer httpRsp.Body.Close()
 	if httpRsp.StatusCode != http.StatusOK {
-		return fmt.Errorf("code:%d", httpRsp.StatusCode)
+		return NewError(ErrStatusCode, fmt.Errorf("code:%d", httpRsp.StatusCode))
 	}
 	if rsp == nil {
 		return nil
@@ -146,14 +146,15 @@ func (q *QBAPI) postWithDecoder(path string, req interface{}, rsp interface{}, d
 
 	data, err := ioutil.ReadAll(httpRsp.Body)
 	if err != nil {
-		return err
+		return NewError(ErrNetwork, err)
 	}
 	if err := decoder(data, rsp); err != nil {
-		return err
+		return NewError(ErrUnmarsal, err)
 	}
 	return nil
 }
 
+//Login /api/v2/auth/login
 func (q *QBAPI) Login() error {
 	req := &LoginReq{Username: q.c.Username, Password: q.c.Password}
 	rsp, err := q.post(apiLogin, q.struct2map(req))
@@ -163,25 +164,128 @@ func (q *QBAPI) Login() error {
 	defer rsp.Body.Close()
 	data, err := ioutil.ReadAll(rsp.Body)
 	if err != nil {
-		return err
+		return NewError(ErrNetwork, err)
 	}
 	if !strings.Contains(strings.ToLower(string(data)), "ok") {
-		return fmt.Errorf("login fail, data:%s", string(data))
+		return NewError(ErrLogin, fmt.Errorf("login fail:%s", string(data)))
 	}
 	return nil
 }
 
-func (q *QBAPI) GetApplicationVersion() (string, error) {
+//GetApplicationVersion /api/v2/app/version
+func (q *QBAPI) GetApplicationVersion(req *GetApplicationVersionReq) (*GetApplicationVersionRsp, error) {
 	var version string
 	err := q.getWithDecoder(apiGetAPPVersion, nil, &version, StrDec)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return version, nil
+	return &GetApplicationVersionRsp{version}, nil
 }
 
-func (q *QBAPI) GetTorrentList(req *GetTorrentListRequest) (*GetTorrentListResponse, error) {
-	rsp := &GetTorrentListResponse{Items: make([]*TorrentListItem, 0)}
+//GetAPIVersion /api/v2/app/webapiVersion
+func (q *QBAPI) GetAPIVersion(req *GetAPIVersionReq) (*GetAPIVersionRsp, error) {
+	var version string
+	err := q.getWithDecoder(apiGetAPIVersion, nil, &version, StrDec)
+	if err != nil {
+		return nil, err
+	}
+	return &GetAPIVersionRsp{Version: version}, nil
+}
+
+//GetBuildInfo /api/v2/app/buildInfo
+func (q *QBAPI) GetBuildInfo(req *GetBuildInfoReq) (*GetBuildInfoRsp, error) {
+	rsp := &GetBuildInfoRsp{Info: &BuildInfo{}}
+	if err := q.getWithDecoder(apiGetBuildInfo, req, rsp.Info, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//ShutDownAPPlication /api/v2/app/shutdown
+func (q *QBAPI) ShutDownAPPlication(req *ShutdownApplicationReq) (*ShutdownApplicationRsp, error) {
+	err := q.postWithDecoder(apiShutdownAPP, nil, nil, JsonDec)
+	if err != nil {
+		return nil, err
+	}
+	return &ShutdownApplicationRsp{}, nil
+}
+
+//GetApplicationPreferences /api/v2/app/preferences
+func (q *QBAPI) GetApplicationPreferences(req *GetApplicationPreferencesReq) (*GetApplicationPreferencesRsp, error) {
+	rsp := &GetApplicationPreferencesRsp{}
+	err := q.getWithDecoder(apiGetAPPPerf, req, rsp, JsonDec)
+	if err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//SetApplicationPreferences /api/v2/app/setPreferences
+func (q *QBAPI) SetApplicationPreferences(req *SetApplicationPreferencesReq) (*SetApplicationPreferencesRsp, error) {
+	//TODO:
+	return nil, fmt.Errorf("not impl")
+	// rsp := &SetApplicationPreferencesRsp{}
+	// err := q.postWithDecoder(apiSetAPPPref, req, rsp, JsonDec)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return rsp, nil
+}
+
+//GetDefaultSavePath /api/v2/app/defaultSavePath
+func (q *QBAPI) GetDefaultSavePath(req *GetDefaultSavePathReq) (*GetDefaultSavePathRsp, error) {
+	var path string
+	if err := q.getWithDecoder(apiGetDefaultSavePath, nil, &path, StrDec); err != nil {
+		return nil, err
+	}
+	return &GetDefaultSavePathRsp{Path: path}, nil
+}
+
+//GetLog /api/v2/log/main
+func (q *QBAPI) GetLog(req *GetLogReq) (*GetLogRsp, error) {
+	rsp := &GetLogRsp{Items: make([]*LogItem, 0)}
+	if err := q.getWithDecoder(apiGetLog, req, &rsp.Items, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetPeerLog /api/v2/log/peers
+func (q *QBAPI) GetPeerLog(req *GetPeerLogReq) (*GetPeerLogRsp, error) {
+	rsp := &GetPeerLogRsp{Items: make([]*PeerLogItem, 0)}
+	if err := q.getWithDecoder(apiGetPeerLog, req, &rsp.Items, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetMainData /api/v2/sync/maindata
+func (q *QBAPI) GetMainData(req *GetMainDataReq) (*GetMainDataRsp, error) {
+	rsp := &GetMainDataRsp{}
+	if err := q.getWithDecoder(apiGetMainData, req, &rsp, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetTorrentPeerData /api/v2/sync/torrentPeers
+func (q *QBAPI) GetTorrentPeerData(req *GetTorrentPeerDataReq) (*GetTorrentPeerDataRsp, error) {
+	rsp := &GetTorrentPeerDataRsp{Data: &TorrentPeerData{}, Exist: false}
+	err := q.getWithDecoder(apiGetTorrentPeerData, req, rsp.Data, JsonDec)
+	if err == nil {
+		rsp.Exist = true
+		return rsp, nil
+	}
+	code, err := RootCause(err)
+	if code == ErrStatusCode && strings.Contains(err.Error(), "404") {
+		return rsp, nil
+	}
+	return nil, err
+}
+
+//GetTorrentList /api/v2/torrents/info
+func (q *QBAPI) GetTorrentList(req *GetTorrentListReq) (*GetTorrentListRsp, error) {
+	rsp := &GetTorrentListRsp{Items: make([]*TorrentListItem, 0)}
 	if err := q.getWithDecoder(apiGetTorrentList, req, &rsp.Items, JsonDec); err != nil {
 		return nil, err
 	}
