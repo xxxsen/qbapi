@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -88,9 +90,23 @@ func (q *QBAPI) post(ctx context.Context, path string, values map[string]string)
 
 	resp, err := q.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, NewError(ErrNetwork, err)
 	}
 	return resp, nil
+}
+
+func (q *QBAPI) postMultiPart(ctx context.Context, path string, buffer *bytes.Buffer, part *multipart.Writer) (*http.Response, error) {
+	uri := q.buildURI(path)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, uri, buffer)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", part.FormDataContentType())
+	rsp, err := q.client.Do(req)
+	if err != nil {
+		return nil, NewError(ErrNetwork, err)
+	}
+	return rsp, nil
 }
 
 func (q *QBAPI) struct2map(req interface{}) (map[string]string, error) {
@@ -537,9 +553,86 @@ func (q *QBAPI) ReannounceTorrents(ctx context.Context, req *ReannounceTorrentsR
 	return &ReannounceTorrentsRsp{}, nil
 }
 
+func (q *QBAPI) writeProperties(writer *multipart.Writer, meta *AddTorrentMeta) error {
+	if meta == nil {
+		return nil
+	}
+	cb := func(key string, value interface{}) error {
+		w, err := writer.CreateFormField(key)
+		if err != nil {
+			return err
+		}
+		v := fmt.Sprintf("%v", value)
+		if _, err := w.Write([]byte(v)); err != nil {
+			return err
+		}
+		return nil
+	}
+	if err := IterStruct(meta, "json", cb); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddNewTorrentRsp, error) {
-	//TODO:
-	panic("impl")
+	if len(req.File) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("params err"))
+	}
+
+	buffer := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buffer)
+	for _, torrent := range req.File {
+		w, err := writer.CreateFormFile("torrents", filepath.Base(torrent))
+		if err != nil {
+			return nil, NewError(ErrFile, err)
+		}
+		data, err := ioutil.ReadFile(torrent)
+		if err != nil {
+			return nil, NewError(ErrFile, err)
+		}
+		if _, err := w.Write(data); err != nil {
+			return nil, NewError(ErrFile, err)
+		}
+	}
+	if err := q.writeProperties(writer, req.Meta); err != nil {
+		return nil, NewError(ErrUnknown, err)
+	}
+	httpRsp, err := q.postMultiPart(ctx, apiAddNewTorrent, buffer, writer)
+	if err != nil {
+		return nil, err
+	}
+	defer httpRsp.Body.Close()
+	if httpRsp.StatusCode != http.StatusOK {
+		return nil, NewError(ErrStatusCode, NewStatusCodeErr(httpRsp.StatusCode))
+	}
+	return &AddNewTorrentRsp{}, nil
+}
+
+func (q *QBAPI) AddNewLink(ctx context.Context, req *AddNewLinkReq) (*AddNewLinkRsp, error) {
+	if len(req.Url) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("params err"))
+	}
+	buffer := bytes.NewBuffer(nil)
+	writer := multipart.NewWriter(buffer)
+	w, err := writer.CreateFormField("urls")
+	if err != nil {
+		return nil, NewError(ErrInternal, err)
+	}
+	if _, err := w.Write([]byte(strings.Join(req.Url, "\r\n"))); err != nil {
+		return nil, NewError(ErrInternal, err)
+	}
+	if err := q.writeProperties(writer, req.Meta); err != nil {
+		return nil, NewError(ErrUnknown, err)
+	}
+	httpRsp, err := q.postMultiPart(ctx, apiAddNewTorrent, buffer, writer)
+	if err != nil {
+		return nil, err
+	}
+	defer httpRsp.Body.Close()
+	if httpRsp.StatusCode != http.StatusOK {
+		return nil, NewError(ErrStatusCode, NewStatusCodeErr(httpRsp.StatusCode))
+	}
+	return &AddNewLinkRsp{}, nil
 }
 
 func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorrentReq) (*AddTrackersToTorrentRsp, error) {

@@ -10,6 +10,7 @@ const (
 	ErrStatusCode = -10005
 	ErrLogin      = -10006
 	ErrUnknown    = -10007
+	ErrFile       = -10008
 )
 
 type FilePriority int
@@ -60,7 +61,7 @@ const (
 	apiDeleteTorrents                = "/api/v2/torrents/delete"
 	apiRecheckTorrents               = "/api/v2/torrents/recheck"
 	apiReannounceTorrents            = "/api/v2/torrents/reannounce"
-	apiAddNewTorrent                 = "" //form upload
+	apiAddNewTorrent                 = "/api/v2/torrents/add" //form upload
 	apiAddTrackersToTorrent          = "/api/v2/torrents/addTrackers"
 	apiEditTrackers                  = "/api/v2/torrents/editTracker"
 	apiRemoveTrackers                = "/api/v2/torrents/removeTrackers"

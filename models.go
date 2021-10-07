@@ -615,10 +615,38 @@ type reannounceTorrentsInnerReq struct {
 type ReannounceTorrentsRsp struct {
 }
 
+type AddTorrentMeta struct {
+	Savepath           *string  `json:"savepath"`           //Download folder
+	Cookie             *string  `json:"cookie"`             //Cookie sent to download the .torrent file
+	Category           *string  `json:"category"`           //Category for the torrent
+	Tags               string   `json:"tags"`               //Tags for the torrent, split by ','
+	SkipChecking       *bool    `json:"skip_checking"`      //Skip hash checking. Possible values are true, false (default)
+	Paused             *bool    `json:"paused"`             //Add torrents in the paused state. Possible values are true, false (default)
+	RootFolder         *bool    `json:"root_folder"`        //Create the root folder. Possible values are true, false, unset (default)
+	Rename             *string  `json:"rename"`             //Rename torrent
+	UpLimit            *int     `json:"upLimit"`            //Set torrent upload speed limit. Unit in bytes/second
+	DlLimit            *int     `json:"dlLimit"`            //Set torrent download speed limit. Unit in bytes/second
+	RatioLimit         *float64 `json:"ratioLimit"`         //Set torrent share ratio limit
+	SeedingTimeLimit   *int     `json:"seedingTimeLimit"`   //Set torrent seeding time limit. Unit in seconds
+	AutoTMM            *bool    `json:"autoTMM"`            //Whether Automatic Torrent Management should be used
+	SequentialDownload *string  `json:"sequentialDownload"` //Enable sequential download. Possible values are true, false (default)
+	FirstLastPiecePrio *string  `json:"firstLastPiecePrio"` //Prioritize download first last piece. Possible values are true, false (default)
+}
+
 type AddNewTorrentReq struct {
+	File []string
+	Meta *AddTorrentMeta
 }
 
 type AddNewTorrentRsp struct {
+}
+
+type AddNewLinkReq struct {
+	Url  []string
+	Meta *AddTorrentMeta
+}
+
+type AddNewLinkRsp struct {
 }
 
 type AddTrackersToTorrentReq struct {

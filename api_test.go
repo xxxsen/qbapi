@@ -8,14 +8,17 @@ import (
 )
 
 type cfg struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Host     string `json:"host"`
+	Username    string   `json:"username"`
+	Password    string   `json:"password"`
+	Host        string   `json:"host"`
+	TorrentFile []string `json:"torrent"`
+	Link        []string `json:"link"`
 }
 
+var testCfg = getCfg()
 var testApi = getAPI()
 
-func getAPI() *QBAPI {
+func getCfg() *cfg {
 	data, err := ioutil.ReadFile(".vscode/cfg.json")
 	if err != nil {
 		panic(err)
@@ -25,6 +28,11 @@ func getAPI() *QBAPI {
 	if err != nil {
 		panic(err)
 	}
+	return cf
+}
+
+func getAPI() *QBAPI {
+	cf := testCfg
 	var opts []Option
 	opts = append(opts, WithAuth(cf.Username, cf.Password))
 	opts = append(opts, WithHost(cf.Host))
@@ -177,6 +185,30 @@ func TestBanPeers(t *testing.T) {
 	_, err := testApi.BanPeers(context.Background(), &BanPeersReq{
 		[]string{
 			"54.111.178.247:18635",
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAddTorrent(t *testing.T) {
+	_, err := testApi.AddNewTorrent(context.Background(), &AddNewTorrentReq{
+		File: testCfg.TorrentFile,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestAddLink(t *testing.T) {
+	pause := true
+	dlLimit := 512 * 1024
+	_, err := testApi.AddNewLink(context.Background(), &AddNewLinkReq{
+		Url: testCfg.Link,
+		Meta: &AddTorrentMeta{
+			Paused:  &pause,
+			DlLimit: &dlLimit,
 		},
 	})
 	if err != nil {
