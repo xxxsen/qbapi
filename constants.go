@@ -12,6 +12,15 @@ const (
 	ErrUnknown    = -10007
 )
 
+type FilePriority int
+
+const (
+	FilePriorityDoNotDownload = 0
+	FilePriorityNormal        = 1
+	FilePriorityHigh          = 6
+	FilePriorityMaximal       = 7
+)
+
 const (
 	//login
 	apiLogin = "/api/v2/auth/login"

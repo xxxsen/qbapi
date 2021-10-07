@@ -443,7 +443,7 @@ func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiece
 	rsp := &GetTorrentPiecesStatesRsp{Exist: true, States: make([]int, 0)}
 	err := q.getWithDecoder(ctx, apiGetTorrentPiecesStates, req, rsp.States, JsonDec)
 	if err == nil {
-		return rsp, err
+		return rsp, nil
 	}
 	rsp.Exist = false
 	if q.is404Err(err) {
@@ -453,170 +453,624 @@ func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiece
 }
 
 func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiecesHashesReq) (*GetTorrentPiecesHashesRsp, error) {
-	panic("impl")
+	rsp := &GetTorrentPiecesHashesRsp{Exist: true, Hashes: make([]string, 0)}
+	err := q.getWithDecoder(ctx, apiGetTorrentPiecesHashes, req, &rsp.Hashes, JsonDec)
+	if err == nil {
+		return rsp, nil
+	}
+	rsp.Exist = false
+	if q.is404Err(err) {
+		return rsp, nil
+	}
+	return nil, err
 }
 
 func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*PauseTorrentsRsp, error) {
-	panic("impl")
-
+	if len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
+	}
+	hashes := strings.Join(req.Hash, "|")
+	if err := q.getWithDecoder(ctx, apiPauseTorrents, &pauseTorrentsInnerReq{Hashes: hashes}, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &PauseTorrentsRsp{}, nil
 }
 
 func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*ResumeTorrentsRsp, error) {
-	panic("impl")
+	if len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
+	}
+	hashes := strings.Join(req.Hash, "|")
+	if err := q.getWithDecoder(ctx, apiResumeTorrents, &resumeTorrentsInnerReq{Hashes: hashes}, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &ResumeTorrentsRsp{}, nil
 }
 
 func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*DeleteTorrentsRsp, error) {
-	panic("impl")
+	if !req.IsDeleteAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
+	}
+	innerReq := &deleteTorrentsInnerReq{
+		DeleteFiles: req.IsDeleteFile,
+	}
+	if req.IsDeleteAll {
+		innerReq.Hashes = "all"
+	} else {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.getWithDecoder(ctx, apiDeleteTorrents, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &DeleteTorrentsRsp{}, nil
 }
 
 func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*RecheckTorrentsRsp, error) {
-	panic("impl")
+	if !req.IsRecheckAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
+	}
+	innerReq := &recheckTorrentsInnerReq{}
+	if req.IsRecheckAll {
+		innerReq.Hashes = "all"
+	} else {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.getWithDecoder(ctx, apiRecheckTorrents, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RecheckTorrentsRsp{}, nil
 }
 
 func (q *QBAPI) ReannounceTorrents(ctx context.Context, req *ReannounceTorrentsReq) (*ReannounceTorrentsRsp, error) {
-	panic("impl")
+	if !req.IsReannounceAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
+	}
+	innerReq := &reannounceTorrentsInnerReq{}
+	if req.IsReannounceAll {
+		innerReq.Hashes = "all"
+	} else {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.getWithDecoder(ctx, apiReannounceTorrents, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &ReannounceTorrentsRsp{}, nil
 }
 
 func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddNewTorrentRsp, error) {
+	//TODO:
 	panic("impl")
-
 }
 
 func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorrentReq) (*AddTrackersToTorrentRsp, error) {
-	panic("impl")
+	if len(req.Url) == 0 || len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	//TODO: check & urlencode logic
+	innerReq := &addTrackersToTorrentInnerReq{Urls: strings.Join(req.Url, "\n"), Hash: req.Hash}
+	err := q.postWithDecoder(ctx, apiAddTrackersToTorrent, innerReq, nil, JsonDec)
+	if err == nil {
+		return &AddTrackersToTorrentRsp{}, nil
+	}
+	return nil, err
 }
 
+/*
+400	newUrl is not a valid URL
+404	Torrent hash was not found
+409	newUrl already exists for the torrent
+409	origUrl was not found
+200	All other scenarios
+*/
 func (q *QBAPI) EditTrackers(ctx context.Context, req *EditTrackersReq) (*EditTrackersRsp, error) {
-	panic("impl")
-
+	rsp := &EditTrackersRsp{}
+	if len(req.Hash) == 0 || len(req.NewUrl) == 0 || len(req.OrigUrl) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiEditTrackers, req, rsp, JsonDec); err != nil {
+		return nil, err
+	}
+	return &EditTrackersRsp{}, nil
 }
 
+/*
+404	Torrent hash was not found
+409	All urls were not found
+200	All other scenarios
+*/
 func (q *QBAPI) RemoveTrackers(ctx context.Context, req *RemoveTrackersReq) (*RemoveTrackersRsp, error) {
-	panic("impl")
+	if len(req.Hash) == 0 || len(req.Url) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &removeTrackersInnerReq{
+		Hash: req.Hash,
+		Urls: strings.Join(req.Url, "|"),
+	}
+	if err := q.postWithDecoder(ctx, apiRemoveTrackers, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RemoveTrackersRsp{}, nil
 }
 
+/*
+400	None of the supplied peers are valid
+200	All other scenarios
+*/
 func (q *QBAPI) AddPeers(ctx context.Context, req *AddPeersReq) (*AddPeersRsp, error) {
-	panic("impl")
-
+	if len(req.Hash) == 0 || len(req.Peer) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &addPeersInnerReq{
+		Hashes: strings.Join(req.Hash, "|"),
+		Peers:  strings.Join(req.Peer, "|"),
+	}
+	if err := q.postWithDecoder(ctx, apiAddPeers, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &AddPeersRsp{}, nil
 }
 
+/*
+409	Torrent queueing is not enabled
+200	All other scenarios
+*/
 func (q *QBAPI) IncreaseTorrentPriority(ctx context.Context, req *IncreaseTorrentPriorityReq) (*IncreaseTorrentPriorityRsp, error) {
-	panic("impl")
+	if !req.IsIncreaseAllTorrent && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := increaseTorrentPriorityInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsIncreaseAllTorrent {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiIncreaseTorrentPriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &IncreaseTorrentPriorityRsp{}, nil
 }
 
+/*
+409	Torrent queueing is not enabled
+200	All other scenarios
+*/
 func (q *QBAPI) DecreaseTorrentPriority(ctx context.Context, req *DecreaseTorrentPriorityReq) (*DecreaseTorrentPriorityRsp, error) {
-	panic("impl")
+	if !req.IsDecreaseAllTorrent && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := decreaseTorrentPriorityInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsDecreaseAllTorrent {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiDecreaseTorrentPriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &DecreaseTorrentPriorityRsp{}, nil
 }
 
 func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentPriorityReq) (*MaximalTorrentPriorityRsp, error) {
-	panic("impl")
+	if !req.IsMaximalAllTorrent && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := maximalTorrentPriorityInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsMaximalAllTorrent {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiMaximalTorrentPriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &MaximalTorrentPriorityRsp{}, nil
 }
 
 func (q *QBAPI) MinimalTorrentPriority(ctx context.Context, req *MinimalTorrentPriorityReq) (*MinimalTorrentPriorityRsp, error) {
-	panic("impl")
+	if !req.IsMinimalAllTorrent && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := minimalTorrentPriorityInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsMinimalAllTorrent {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiMinimalTorrentPriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &MinimalTorrentPriorityRsp{}, nil
 }
 
+/*
+400	Priority is invalid
+400	At least one file id is not a valid integer
+404	Torrent hash was not found
+409	Torrent metadata hasn't downloaded yet
+409	At least one file id was not found
+200	All other scenarios
+*/
 func (q *QBAPI) SetFilePriority(ctx context.Context, req *SetFilePriorityReq) (*SetFilePriorityRsp, error) {
-	panic("impl")
+	if len(req.Hash) == 0 || len(req.Id) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setFilePriorityInnerReq{
+		Hash:     req.Hash,
+		Id:       strings.Join(req.Id, "|"),
+		Priority: int(req.Priority),
+	}
+	if err := q.postWithDecoder(ctx, apiSetFilePriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetFilePriorityRsp{}, nil
 }
 
 func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDownloadLimitReq) (*GetTorrentDownloadLimitRsp, error) {
-	panic("impl")
+	if !req.IsGetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &getTorrentDownloadLimitInnerReq{Hashes: "all"}
+	if !req.IsGetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	rsp := &GetTorrentDownloadLimitRsp{SpeedMap: make(map[string]int)}
+	if err := q.postWithDecoder(ctx, apiGetTorrentDownloadLimit, innerReq, &rsp.SpeedMap, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
 }
 
 func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDownloadLimitReq) (*SetTorrentDownloadLimitRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setTorrentDownloadLimitInnerReq{
+		Hashes: "all",
+		Speed:  req.Speed,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentDownloadLimit, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentDownloadLimitRsp{}, nil
 }
 
 func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLimitReq) (*SetTorrentShareLimitRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setTorrentShareLimitInnerReq{
+		Hashes:           "all",
+		SeedingTimeLimit: req.SeedingTimeLimit,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentShareLimit, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentShareLimitRsp{}, nil
 }
 
 func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUploadLimitReq) (*GetTorrentUploadLimitRsp, error) {
-	panic("impl")
+	if !req.IsGetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &getTorrentUploadLimitInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsGetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	rsp := &GetTorrentUploadLimitRsp{SpeedMap: make(map[string]int)}
+	if err := q.postWithDecoder(ctx, apiGetTorrentUploadLimit, innerReq, &rsp.SpeedMap, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
 }
 
 func (q *QBAPI) SetTorrentUploadLimit(ctx context.Context, req *SetTorrentUploadLimitReq) (*SetTorrentUploadLimitRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setTorrentUploadLimitInnerReq{
+		Hashes: "all",
+		Speed:  req.Speed,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentUploadLimit, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentUploadLimitRsp{}, nil
 }
 
+/*
+400	Save path is empty
+403	User does not have write access to directory
+409	Unable to create save path directory
+200	All other scenarios
+*/
 func (q *QBAPI) SetTorrentLocation(ctx context.Context, req *SetTorrentLocationReq) (*SetTorrentLocationRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setTorrentLocationInnerReq{
+		Hashes:   "all",
+		Location: req.Location,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentLocation, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentLocationRsp{}, nil
 }
 
+/*
+404	Torrent hash is invalid
+409	Torrent name is empty
+200	All other scenarios
+*/
 func (q *QBAPI) SetTorrentName(ctx context.Context, req *SetTorrentNameReq) (*SetTorrentNameRsp, error) {
-	panic("impl")
+	if len(req.Hash) == 0 || len(req.Name) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentName, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentNameRsp{}, nil
 }
 
+/*
+409	Category name does not exist
+200	All other scenarios
+*/
 func (q *QBAPI) SetTorrentCategory(ctx context.Context, req *SetTorrentCategoryReq) (*SetTorrentCategoryRsp, error) {
-	panic("impl")
+	if len(req.Category) == 0 || (!req.IsSetAll && len(req.Hash) == 0) {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setTorrentCategoryInnerReq{
+		Hashes:   "all",
+		Category: req.Category,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetTorrentCategory, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetTorrentCategoryRsp{}, nil
 }
 
 func (q *QBAPI) GetAllCategories(ctx context.Context, req *GetAllCategoriesReq) (*GetAllCategoriesRsp, error) {
-	panic("impl")
+	rsp := &GetAllCategoriesRsp{Categories: make(map[string]*CategoryInfo)}
+	if err := q.getWithDecoder(ctx, apiGetAllCategories, req, &rsp.Categories, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
 }
 
+/*
+400	Category name is empty
+409	Category name is invalid
+200	All other scenarios
+*/
 func (q *QBAPI) AddNewCategory(ctx context.Context, req *AddNewCategoryReq) (*AddNewCategoryRsp, error) {
-	panic("impl")
+	if len(req.Category) == 0 || len(req.SavePath) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiAddNewCategory, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &AddNewCategoryRsp{}, nil
 }
 
+/*
+400	Category name is empty
+409	Category editing failed
+200	All other scenarios
+*/
 func (q *QBAPI) EditCategory(ctx context.Context, req *EditCategoryReq) (*EditCategoryRsp, error) {
-	panic("impl")
+	if len(req.Category) == 0 || len(req.SavePath) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiEditCategory, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &EditCategoryRsp{}, nil
 }
 
 func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) (*RemoveCategoriesRsp, error) {
-	panic("impl")
+	if len(req.Category) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &removeCategoriesInnerReq{
+		Categories: strings.Join(req.Category, "\n"),
+	}
+	if err := q.postWithDecoder(ctx, apiRemoveCategories, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RemoveCategoriesRsp{}, nil
 }
 
 func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*AddTorrentTagsRsp, error) {
-	panic("impl")
+	if len(req.Tag) == 0 || (!req.IsAddAll && len(req.Hash) == 0) {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &addTorrentTagsInnerReq{
+		Tags:   strings.Join(req.Tag, ","),
+		Hashes: "all",
+	}
+	if !req.IsAddAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiAddTorrentTags, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &AddTorrentTagsRsp{}, nil
 }
 
 func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq) (*RemoveTorrentTagsRsp, error) {
-	panic("impl")
+	if len(req.Tag) == 0 || (!req.IsRemoveAll && len(req.Hash) == 0) {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &removeTorrentTagsInnerReq{
+		Tags:   strings.Join(req.Tag, ","),
+		Hashes: "all",
+	}
+	if !req.IsRemoveAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiRemoveTorrentTags, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RemoveTorrentTagsRsp{}, nil
 }
 
 func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTagsRsp, error) {
-	panic("impl")
-
+	rsp := &GetAllTagsRsp{Tags: make([]string, 0)}
+	if err := q.getWithDecoder(ctx, apiGetAllTags, req, &rsp.Tags, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
 }
 
 func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTagsRsp, error) {
-	panic("impl")
-
+	if len(req.Tag) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := createTagsInnerReq{
+		Tags: strings.Join(req.Tag, ","),
+	}
+	if err := q.postWithDecoder(ctx, apiCreateTags, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &CreateTagsRsp{}, nil
 }
 
 func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTagsRsp, error) {
-	panic("impl")
+	if len(req.Tag) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := deleteTagsInnerReq{
+		Tags: strings.Join(req.Tag, ","),
+	}
+	if err := q.postWithDecoder(ctx, apiDeleteTags, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &DeleteTagsRsp{}, nil
 
 }
 
 func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutomaticTorrentManagementReq) (*SetAutomaticTorrentManagementRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setAutomaticTorrentManagementInnerReq{
+		Hashes: "all",
+		Enable: req.Enable,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetAutomaticTorrentManagement, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetAutomaticTorrentManagementRsp{}, nil
 }
 
 func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequentialDownloadReq) (*ToggleSequentialDownloadRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &toggleSequentialDownloadInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiToggleSequentialDownload, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &ToggleSequentialDownloadRsp{}, nil
 }
 
 func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOrLastPiecePriorityReq) (*SetFirstOrLastPiecePriorityRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setFirstOrLastPiecePriorityInnerReq{
+		Hashes: "all",
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetFirstOrLastPiecePriority, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetFirstOrLastPiecePriorityRsp{}, nil
 }
 
 func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetForceStartRsp, error) {
-	panic("impl")
-
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setForceStartInnerReq{
+		Hashes: "all",
+		Value:  req.Value,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetForceStart, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetForceStartRsp{}, nil
 }
 
 func (q *QBAPI) SetSuperSeeding(ctx context.Context, req *SetSuperSeedingReq) (*SetSuperSeedingRsp, error) {
-	panic("impl")
+	if !req.IsSetAll && len(req.Hash) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	innerReq := &setSuperSeedingInnerReq{
+		Hashes: "all",
+		Value:  req.Value,
+	}
+	if !req.IsSetAll {
+		innerReq.Hashes = strings.Join(req.Hash, "|")
+	}
+	if err := q.postWithDecoder(ctx, apiSetSuperSeeding, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetSuperSeedingRsp{}, nil
 }
 
+/*
+400	Missing newPath parameter
+409	Invalid newPath or oldPath, or newPath already in use
+200	All other scenarios
+*/
 func (q *QBAPI) RenameFile(ctx context.Context, req *RenameFileReq) (*RenameFileRsp, error) {
-	panic("impl")
-
+	if len(req.Hash) == 0 || len(req.OldPath) == 0 || len(req.NewPath) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiRenameFile, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RenameFileRsp{}, nil
 }
 
 func (q *QBAPI) RenameFolder(ctx context.Context, req *RenameFolderReq) (*RenameFolderRsp, error) {
-	panic("impl")
+	if len(req.Hash) == 0 || len(req.OldPath) == 0 || len(req.NewPath) == 0 {
+		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
+	}
+	if err := q.postWithDecoder(ctx, apiRenameFolder, req, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &RenameFolderRsp{}, nil
 }

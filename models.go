@@ -547,36 +547,69 @@ type GetTorrentPiecesStatesRsp struct {
 }
 
 type GetTorrentPiecesHashesReq struct {
+	Hash string `json:"hash"`
 }
 
 type GetTorrentPiecesHashesRsp struct {
+	Exist  bool
+	Hashes []string
 }
 
 type PauseTorrentsReq struct {
+	Hash []string
+}
+
+type pauseTorrentsInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type PauseTorrentsRsp struct {
 }
 
 type ResumeTorrentsReq struct {
+	Hash []string
+}
+
+type resumeTorrentsInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type ResumeTorrentsRsp struct {
 }
 
 type DeleteTorrentsReq struct {
+	IsDeleteAll  bool
+	IsDeleteFile bool
+	Hash         []string //use only IsDeleteAll set to false
+}
+
+type deleteTorrentsInnerReq struct {
+	Hashes      string `json:"hashes"`
+	DeleteFiles bool   `json:"deleteFiles"`
 }
 
 type DeleteTorrentsRsp struct {
 }
 
 type RecheckTorrentsReq struct {
+	IsRecheckAll bool
+	Hash         []string
+}
+
+type recheckTorrentsInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type RecheckTorrentsRsp struct {
 }
 
 type ReannounceTorrentsReq struct {
+	IsReannounceAll bool
+	Hash            []string
+}
+
+type reannounceTorrentsInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type ReannounceTorrentsRsp struct {
@@ -589,137 +622,282 @@ type AddNewTorrentRsp struct {
 }
 
 type AddTrackersToTorrentReq struct {
+	Hash string
+	Url  []string
+}
+
+type addTrackersToTorrentInnerReq struct {
+	Hash string `json:"hash"`
+	Urls string `json:"urls"`
 }
 
 type AddTrackersToTorrentRsp struct {
 }
 
 type EditTrackersReq struct {
+	Hash    string `json:"hash"`
+	OrigUrl string `json:"origUrl"`
+	NewUrl  string `json:"newUrl"`
 }
 
 type EditTrackersRsp struct {
 }
 
 type RemoveTrackersReq struct {
+	Hash string
+	Url  []string
+}
+
+type removeTrackersInnerReq struct {
+	Hash string `json:"hash"`
+	Urls string `json:"urls"`
 }
 
 type RemoveTrackersRsp struct {
 }
 
 type AddPeersReq struct {
+	Hash []string
+	Peer []string
+}
+
+type addPeersInnerReq struct {
+	Hashes string `json:"hashes"`
+	Peers  string `json:"peers"`
 }
 
 type AddPeersRsp struct {
 }
 
 type IncreaseTorrentPriorityReq struct {
+	IsIncreaseAllTorrent bool
+	Hash                 []string
+}
+
+type increaseTorrentPriorityInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type IncreaseTorrentPriorityRsp struct {
 }
 
 type DecreaseTorrentPriorityReq struct {
+	IsDecreaseAllTorrent bool
+	Hash                 []string
+}
+
+type decreaseTorrentPriorityInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type DecreaseTorrentPriorityRsp struct {
 }
 
 type MaximalTorrentPriorityReq struct {
+	IsMaximalAllTorrent bool
+	Hash                []string
+}
+
+type maximalTorrentPriorityInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type MaximalTorrentPriorityRsp struct {
 }
 
 type MinimalTorrentPriorityReq struct {
+	IsMinimalAllTorrent bool
+	Hash                []string
+}
+
+type minimalTorrentPriorityInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type MinimalTorrentPriorityRsp struct {
 }
 
 type SetFilePriorityReq struct {
+	Hash     string
+	Id       []string
+	Priority FilePriority
+}
+
+type setFilePriorityInnerReq struct {
+	Hash     string `json:"hash"`     //The hash of the torrent
+	Id       string `json:"id"`       //File ids, separated by |
+	Priority int    `json:"priority"` //File priority to set (consult torrent contents API for possible values)
 }
 
 type SetFilePriorityRsp struct {
 }
 
 type GetTorrentDownloadLimitReq struct {
+	IsGetAll bool
+	Hash     []string
+}
+
+type getTorrentDownloadLimitInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type GetTorrentDownloadLimitRsp struct {
+	SpeedMap map[string]int //{hash:speed, ...}
 }
 
 type SetTorrentDownloadLimitReq struct {
+	IsSetAll bool
+	Hash     []string
+	Speed    int
+}
+
+type setTorrentDownloadLimitInnerReq struct {
+	Hashes string `json:"hashes"`
+	Speed  int    `json:"limit"`
 }
 
 type SetTorrentDownloadLimitRsp struct {
 }
 
 type SetTorrentShareLimitReq struct {
+	IsSetAll         bool
+	Hash             []string
+	SeedingTimeLimit int
+}
+
+type setTorrentShareLimitInnerReq struct {
+	Hashes           string `json:"hashes"`
+	SeedingTimeLimit int    `json:"seedingTimeLimit"`
 }
 
 type SetTorrentShareLimitRsp struct {
 }
 
 type GetTorrentUploadLimitReq struct {
+	IsGetAll bool
+	Hash     []string
+}
+
+type getTorrentUploadLimitInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type GetTorrentUploadLimitRsp struct {
+	SpeedMap map[string]int
 }
 
 type SetTorrentUploadLimitReq struct {
+	IsSetAll bool
+	Hash     []string
+	Speed    int
+}
+
+type setTorrentUploadLimitInnerReq struct {
+	Hashes string `json:"hashes"`
+	Speed  int    `json:"limit"`
 }
 
 type SetTorrentUploadLimitRsp struct {
 }
 
 type SetTorrentLocationReq struct {
+	IsSetAll bool
+	Hash     []string
+	Location string
+}
+
+type setTorrentLocationInnerReq struct {
+	Hashes   string `json:"hashes"`
+	Location string `json:"location"`
 }
 
 type SetTorrentLocationRsp struct {
 }
 
 type SetTorrentNameReq struct {
+	Hash string `json:"hash"`
+	Name string `json:"name"`
 }
 
 type SetTorrentNameRsp struct {
 }
 
 type SetTorrentCategoryReq struct {
+	IsSetAll bool
+	Hash     []string
+	Category string
 }
+
+type setTorrentCategoryInnerReq struct {
+	Hashes   string `json:"hashes"`
+	Category string `json:"category"`
+}
+
 type SetTorrentCategoryRsp struct {
 }
 
 type GetAllCategoriesReq struct {
 }
 
+type CategoryInfo struct {
+	Name     string `json:"name"`
+	SavePath string `json:"savePath"`
+}
+
 type GetAllCategoriesRsp struct {
+	Categories map[string]*CategoryInfo
 }
 
 type AddNewCategoryReq struct {
+	Category string `json:"category"`
+	SavePath string `json:"savePath"`
 }
 
 type AddNewCategoryRsp struct {
 }
 
 type EditCategoryReq struct {
+	Category string `json:"category"`
+	SavePath string `json:"savePath"`
 }
 
 type EditCategoryRsp struct {
 }
 
 type RemoveCategoriesReq struct {
+	Category []string
+}
+
+type removeCategoriesInnerReq struct {
+	Categories string `json:"categories"`
 }
 
 type RemoveCategoriesRsp struct {
 }
 
 type AddTorrentTagsReq struct {
+	IsAddAll bool
+	Hash     []string
+	Tag      []string
+}
+
+type addTorrentTagsInnerReq struct {
+	Hashes string `json:"hashes"`
+	Tags   string `json:"tags"`
 }
 
 type AddTorrentTagsRsp struct {
 }
 
 type RemoveTorrentTagsReq struct {
+	IsRemoveAll bool
+	Hash        []string
+	Tag         []string
+}
+
+type removeTorrentTagsInnerReq struct {
+	Hashes string `json:"hashes"`
+	Tags   string `json:"tags"`
 }
 
 type RemoveTorrentTagsRsp struct {
@@ -729,57 +907,110 @@ type GetAllTagsReq struct {
 }
 
 type GetAllTagsRsp struct {
+	Tags []string
 }
 
 type CreateTagsReq struct {
+	Tag []string
+}
+
+type createTagsInnerReq struct {
+	Tags string `json:"tags"`
 }
 
 type CreateTagsRsp struct {
 }
 
 type DeleteTagsReq struct {
+	Tag []string
+}
+
+type deleteTagsInnerReq struct {
+	Tags string `json:"tags"`
 }
 
 type DeleteTagsRsp struct {
 }
 
 type SetAutomaticTorrentManagementReq struct {
+	IsSetAll bool
+	Hash     []string
+	Enable   bool
+}
+
+type setAutomaticTorrentManagementInnerReq struct {
+	Hashes string `json:"hashes"`
+	Enable bool   `json:"enable"`
 }
 
 type SetAutomaticTorrentManagementRsp struct {
 }
 
 type ToggleSequentialDownloadReq struct {
+	IsSetAll bool
+	Hash     []string
+}
+
+type toggleSequentialDownloadInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type ToggleSequentialDownloadRsp struct {
 }
 
 type SetFirstOrLastPiecePriorityReq struct {
+	IsSetAll bool
+	Hash     []string
+}
+
+type setFirstOrLastPiecePriorityInnerReq struct {
+	Hashes string `json:"hashes"`
 }
 
 type SetFirstOrLastPiecePriorityRsp struct {
 }
 
 type SetForceStartReq struct {
+	IsSetAll bool
+	Hash     []string
+	Value    bool
+}
+
+type setForceStartInnerReq struct {
+	Hashes string `json:"hashes"`
+	Value  bool   `json:"bool"`
 }
 
 type SetForceStartRsp struct {
 }
 
 type SetSuperSeedingReq struct {
+	IsSetAll bool
+	Hash     []string
+	Value    bool
+}
+
+type setSuperSeedingInnerReq struct {
+	Hashes string `json:"hashes"`
+	Value  bool   `json:"bool"`
 }
 
 type SetSuperSeedingRsp struct {
 }
 
 type RenameFileReq struct {
+	Hash    string `json:"hash"`    //The hash of the torrent
+	OldPath string `json:"oldPath"` //The old path of the torrent
+	NewPath string `json:"newPath"` //The new path to use for the file
 }
 
 type RenameFileRsp struct {
 }
 
 type RenameFolderReq struct {
+	Hash    string `json:"hash"`    //The hash of the torrent
+	OldPath string `json:"oldPath"` //The old path of the torrent
+	NewPath string `json:"newPath"` //The new path to use for the file
 }
 
 type RenameFolderRsp struct {
