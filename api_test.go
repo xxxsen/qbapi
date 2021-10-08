@@ -256,3 +256,65 @@ func TestGetTorrentPiecesStates(t *testing.T) {
 	assert.NoError(t, err)
 	t.Logf("data:%+v", rsp.States)
 }
+
+func TestGetTorrentPiecesHashes(t *testing.T) {
+	rsp, err := testApi.GetTorrentPiecesHashes(context.Background(), &GetTorrentPiecesHashesReq{Hash: testCfg.ValidHash})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.Hashes)
+}
+
+func TestPauseTorrents(t *testing.T) {
+	_, err := testApi.PauseTorrents(context.Background(), &PauseTorrentsReq{Hash: []string{testCfg.ValidHash}})
+	assert.NoError(t, err)
+}
+
+func TestResumeTorrents(t *testing.T) {
+	_, err := testApi.ResumeTorrents(context.Background(), &ResumeTorrentsReq{Hash: []string{testCfg.ValidHash}})
+	assert.NoError(t, err)
+}
+
+func TestDeleteTorrents(t *testing.T) {
+	_, err := testApi.DeleteTorrents(context.Background(), &DeleteTorrentsReq{Hash: []string{testCfg.ValidHash}})
+	assert.NoError(t, err)
+}
+
+func TestRecheckTorrents(t *testing.T) {
+	_, err := testApi.RecheckTorrents(context.Background(), &RecheckTorrentsReq{IsRecheckAll: true})
+	assert.NoError(t, err)
+}
+
+func TestReannounceTorrents(t *testing.T) {
+	_, err := testApi.ReannounceTorrents(context.Background(), &ReannounceTorrentsReq{IsReannounceAll: true})
+	assert.NoError(t, err)
+}
+
+func TestAddTrackersToTorrent(t *testing.T) {
+	_, err := testApi.AddTrackersToTorrent(context.Background(), &AddTrackersToTorrentReq{
+		Hash: testCfg.ValidHash,
+		Url: []string{
+			"http://local.xxx.com/announce?a=x&b=2",
+			"http://tracker.loadbt.com:6969/announce",
+		},
+	})
+	assert.NoError(t, err)
+}
+
+func TestEditTrackers(t *testing.T) {
+	_, err := testApi.EditTrackers(context.Background(), &EditTrackersReq{
+		Hash:    testCfg.ValidHash,
+		OrigUrl: "http://local.xxx.com/announce?a=x&b=2",
+		NewUrl:  "http://local.ddd.com/announce?a=x&b=2",
+	})
+	assert.NoError(t, err)
+}
+
+func TestRemoveTrackers(t *testing.T) {
+	_, err := testApi.RemoveTrackers(context.Background(), &RemoveTrackersReq{
+		Hash: testCfg.ValidHash,
+		Url: []string{
+			"http://local.ddd.com/announce?a=x&b=2",
+			"http://tracker.loadbt.com:6969/announce",
+		},
+	})
+	assert.NoError(t, err)
+}

@@ -428,6 +428,7 @@ func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiece
 	return rsp, nil
 }
 
+//GetTorrentPiecesHashes /api/v2/torrents/pieceHashes
 func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiecesHashesReq) (*GetTorrentPiecesHashesRsp, error) {
 	rsp := &GetTorrentPiecesHashesRsp{Hashes: make([]string, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentPiecesHashes, req, &rsp.Hashes, JsonDec); err != nil {
@@ -436,6 +437,7 @@ func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiece
 	return rsp, nil
 }
 
+//PauseTorrents /api/v2/torrents/pause
 func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*PauseTorrentsRsp, error) {
 	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -447,6 +449,7 @@ func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*Paus
 	return &PauseTorrentsRsp{}, nil
 }
 
+//ResumeTorrents /api/v2/torrents/resume
 func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*ResumeTorrentsRsp, error) {
 	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -458,6 +461,7 @@ func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*Re
 	return &ResumeTorrentsRsp{}, nil
 }
 
+//DeleteTorrents /api/v2/torrents/delete
 func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*DeleteTorrentsRsp, error) {
 	if !req.IsDeleteAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -476,6 +480,7 @@ func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*De
 	return &DeleteTorrentsRsp{}, nil
 }
 
+//RecheckTorrents /api/v2/torrents/recheck
 func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*RecheckTorrentsRsp, error) {
 	if !req.IsRecheckAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -492,6 +497,7 @@ func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*
 	return &RecheckTorrentsRsp{}, nil
 }
 
+//ReannounceTorrents /api/v2/torrents/reannounce
 func (q *QBAPI) ReannounceTorrents(ctx context.Context, req *ReannounceTorrentsReq) (*ReannounceTorrentsRsp, error) {
 	if !req.IsReannounceAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -529,6 +535,7 @@ func (q *QBAPI) writeProperties(writer *multipart.Writer, meta *AddTorrentMeta) 
 	return nil
 }
 
+//AddNewTorrent /api/v2/torrents/add
 func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddNewTorrentRsp, error) {
 	if len(req.File) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("params err"))
@@ -563,6 +570,7 @@ func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddN
 	return &AddNewTorrentRsp{}, nil
 }
 
+//AddNewLink /api/v2/torrents/add
 func (q *QBAPI) AddNewLink(ctx context.Context, req *AddNewLinkReq) (*AddNewLinkRsp, error) {
 	if len(req.Url) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("params err"))
@@ -590,11 +598,11 @@ func (q *QBAPI) AddNewLink(ctx context.Context, req *AddNewLinkReq) (*AddNewLink
 	return &AddNewLinkRsp{}, nil
 }
 
+//AddTrackersToTorrent /api/v2/torrents/addTrackers
 func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorrentReq) (*AddTrackersToTorrentRsp, error) {
 	if len(req.Url) == 0 || len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
-	//TODO: check & urlencode logic
 	innerReq := &addTrackersToTorrentInnerReq{Urls: strings.Join(req.Url, "\n"), Hash: req.Hash}
 	err := q.postWithDecoder(ctx, apiAddTrackersToTorrent, innerReq, nil, JsonDec)
 	if err == nil {
@@ -610,12 +618,12 @@ func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorr
 409	origUrl was not found
 200	All other scenarios
 */
+//EditTrackers /api/v2/torrents/editTracker
 func (q *QBAPI) EditTrackers(ctx context.Context, req *EditTrackersReq) (*EditTrackersRsp, error) {
-	rsp := &EditTrackersRsp{}
 	if len(req.Hash) == 0 || len(req.NewUrl) == 0 || len(req.OrigUrl) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
-	if err := q.postWithDecoder(ctx, apiEditTrackers, req, rsp, JsonDec); err != nil {
+	if err := q.postWithDecoder(ctx, apiEditTrackers, req, nil, JsonDec); err != nil {
 		return nil, err
 	}
 	return &EditTrackersRsp{}, nil
