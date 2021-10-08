@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type cfg struct {
@@ -13,6 +15,7 @@ type cfg struct {
 	Host        string   `json:"host"`
 	TorrentFile []string `json:"torrent"`
 	Link        []string `json:"link"`
+	ValidHash   string   `json:"valid_hash"`
 }
 
 var testCfg = getCfg()
@@ -116,17 +119,12 @@ func TestGetMainData(t *testing.T) {
 }
 
 func TestGetPeerHash(t *testing.T) {
-	rsp, err := testApi.GetTorrentPeerData(context.Background(), &GetTorrentPeerDataReq{
+	_, err := testApi.GetTorrentPeerData(context.Background(), &GetTorrentPeerDataReq{
 		Hash: "1b175f0992fe932de8de33139698c1fd26988096",
 		Rid:  0,
 	})
 	if err != nil {
 		t.Fatal(err)
-	}
-	if rsp.Exist {
-		t.Logf("found:%+v", rsp.Data)
-	} else {
-		t.Log("not found")
 	}
 }
 
@@ -214,4 +212,47 @@ func TestAddLink(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestGetBuildInfo(t *testing.T) {
+	rsp, err := testApi.GetBuildInfo(context.Background(), &GetBuildInfoReq{})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp)
+	assert.NotNil(t, rsp.Info)
+	assert.NotEqual(t, "", rsp.Info.QT)
+}
+
+func TestGetTorrentGenericProperties(t *testing.T) {
+	_, err := testApi.GetTorrentGenericProperties(context.Background(), &GetTorrentGenericPropertiesReq{Hash: "123"})
+	assert.NoError(t, err)
+	rsp, err := testApi.GetTorrentGenericProperties(context.Background(), &GetTorrentGenericPropertiesReq{Hash: testCfg.ValidHash})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.Property)
+}
+
+func TestGetTorrentTrackers(t *testing.T) {
+	rsp, err := testApi.GetTorrentTrackers(context.Background(), &GetTorrentTrackersReq{Hash: testCfg.ValidHash})
+	assert.NoError(t, err)
+	assert.NotEqual(t, 0, len(rsp.Trackers))
+	t.Logf("data:%+v", rsp.Trackers)
+}
+
+func TestGetTorrentWebSeeds(t *testing.T) {
+	rsp, err := testApi.GetTorrentWebSeeds(context.Background(), &GetTorrentWebSeedsReq{
+		Hash: testCfg.ValidHash,
+	})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.WebSeeds)
+}
+
+func TestGetTorrentContents(t *testing.T) {
+	rsp, err := testApi.GetTorrentContents(context.Background(), &GetTorrentContentsReq{Hash: testCfg.ValidHash})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.Contents)
+}
+
+func TestGetTorrentPiecesStates(t *testing.T) {
+	rsp, err := testApi.GetTorrentPiecesStates(context.Background(), &GetTorrentPiecesStatesReq{Hash: testCfg.ValidHash})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.States)
 }

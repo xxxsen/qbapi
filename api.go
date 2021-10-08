@@ -282,16 +282,11 @@ func (q *QBAPI) GetMainData(ctx context.Context, req *GetMainDataReq) (*GetMainD
 
 //GetTorrentPeerData /api/v2/sync/torrentPeers
 func (q *QBAPI) GetTorrentPeerData(ctx context.Context, req *GetTorrentPeerDataReq) (*GetTorrentPeerDataRsp, error) {
-	rsp := &GetTorrentPeerDataRsp{Data: &TorrentPeerData{}, Exist: false}
-	err := q.getWithDecoder(ctx, apiGetTorrentPeerData, req, rsp.Data, JsonDec)
-	if err == nil {
-		rsp.Exist = true
-		return rsp, nil
+	rsp := &GetTorrentPeerDataRsp{Data: &TorrentPeerData{}}
+	if err := q.getWithDecoder(ctx, apiGetTorrentPeerData, req, rsp.Data, JsonDec); err != nil {
+		return nil, err
 	}
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
+	return rsp, nil
 }
 
 //GetGlobalTransferInfo /api/v2/transfer/info
@@ -382,103 +377,63 @@ func (q *QBAPI) GetTorrentList(ctx context.Context, req *GetTorrentListReq) (*Ge
 	return rsp, nil
 }
 
+//GetTorrentGenericProperties /api/v2/torrents/properties
 func (q *QBAPI) GetTorrentGenericProperties(ctx context.Context, req *GetTorrentGenericPropertiesReq) (*GetTorrentGenericPropertiesRsp, error) {
-	rsp := &GetTorrentGenericPropertiesRsp{Property: &TorrentGenericProperty{}, Exist: true}
-	err := q.getWithDecoder(ctx, apiGetTorrentGenericProp, req, rsp.Property, JsonDec)
-	if err == nil {
-		return rsp, nil
-	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
-}
-
-func (q *QBAPI) GetTorrentTrackers(ctx context.Context, req *GetTorrentTrackersReq) (*GetTorrentTrackersRsp, error) {
-	rsp := &GetTorrentTrackersRsp{Trackers: make([]*TorrentTrackerItem, 0), Exist: true}
-	err := q.getWithDecoder(ctx, apiGetTorrentTrackers, req, &rsp.Trackers, JsonDec)
-	if err == nil {
-		return rsp, nil
-	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
-}
-
-func (q *QBAPI) is404Err(err error) bool {
-	code, err := RootCause(err)
-	if code != ErrStatusCode {
-		return false
-	}
-	errStatus, ok := err.(*StatusCodeErr)
-	if !ok {
-		return false
-	}
-	if errStatus.Code() != http.StatusNotFound {
-		return false
-	}
-	return true
-}
-
-func (q *QBAPI) GetTorrentWebSeeds(ctx context.Context, req *GetTorrentWebSeedsReq) (*GetTorrentWebSeedsRsp, error) {
-	rsp := &GetTorrentWebSeedsRsp{WebSeeds: make([]*TorrentWebSeedItem, 0), Exist: true}
-	err := q.getWithDecoder(ctx, apiGetTorrentWebSeeds, req, &rsp.WebSeeds, JsonDec)
-	if err == nil {
-		return rsp, nil
-	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
+	rsp := &GetTorrentGenericPropertiesRsp{Property: &TorrentGenericProperty{}}
+	if err := q.getWithDecoder(ctx, apiGetTorrentGenericProp, req, rsp.Property, JsonDec); err != nil {
+		return nil, err
 	}
 	return rsp, nil
 }
 
+//GetTorrentTrackers /api/v2/torrents/trackers
+func (q *QBAPI) GetTorrentTrackers(ctx context.Context, req *GetTorrentTrackersReq) (*GetTorrentTrackersRsp, error) {
+	rsp := &GetTorrentTrackersRsp{Trackers: make([]*TorrentTrackerItem, 0)}
+	if err := q.getWithDecoder(ctx, apiGetTorrentTrackers, req, &rsp.Trackers, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetTorrentWebSeeds /api/v2/torrents/webseeds
+func (q *QBAPI) GetTorrentWebSeeds(ctx context.Context, req *GetTorrentWebSeedsReq) (*GetTorrentWebSeedsRsp, error) {
+	rsp := &GetTorrentWebSeedsRsp{WebSeeds: make([]*TorrentWebSeedItem, 0)}
+	if err := q.getWithDecoder(ctx, apiGetTorrentWebSeeds, req, &rsp.WebSeeds, JsonDec); err != nil {
+		return nil, err
+	}
+	return rsp, nil
+}
+
+//GetTorrentContents /api/v2/torrents/files
 func (q *QBAPI) GetTorrentContents(ctx context.Context, req *GetTorrentContentsReq) (*GetTorrentContentsRsp, error) {
-	rsp := &GetTorrentContentsRsp{Contents: make([]*TorrentContentItem, 0), Exist: true}
+	rsp := &GetTorrentContentsRsp{Contents: make([]*TorrentContentItem, 0)}
 
 	innerReq := &getTorrentContentsInnerReq{Hash: req.Hash}
 	if len(req.Index) > 0 {
 		indexes := strings.Join(req.Index, "|")
 		innerReq.Indexes = &indexes
 	}
-	err := q.getWithDecoder(ctx, apiGetTorrentContents, innerReq, rsp.Contents, JsonDec)
-	if err == nil {
-		return rsp, nil
+	if err := q.getWithDecoder(ctx, apiGetTorrentContents, innerReq, &rsp.Contents, JsonDec); err != nil {
+		return nil, err
 	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
+	return rsp, nil
 }
 
+//GetTorrentPiecesStates /api/v2/torrents/pieceStates
 func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiecesStatesReq) (*GetTorrentPiecesStatesRsp, error) {
-	rsp := &GetTorrentPiecesStatesRsp{Exist: true, States: make([]int, 0)}
-	err := q.getWithDecoder(ctx, apiGetTorrentPiecesStates, req, rsp.States, JsonDec)
-	if err == nil {
-		return rsp, nil
+	rsp := &GetTorrentPiecesStatesRsp{States: make([]int, 0)}
+	if err := q.getWithDecoder(ctx, apiGetTorrentPiecesStates, req, &rsp.States, JsonDec); err != nil {
+		return nil, err
 	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
+	return rsp, nil
 }
 
 func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiecesHashesReq) (*GetTorrentPiecesHashesRsp, error) {
-	rsp := &GetTorrentPiecesHashesRsp{Exist: true, Hashes: make([]string, 0)}
-	err := q.getWithDecoder(ctx, apiGetTorrentPiecesHashes, req, &rsp.Hashes, JsonDec)
-	if err == nil {
-		return rsp, nil
+	rsp := &GetTorrentPiecesHashesRsp{Hashes: make([]string, 0)}
+	if err := q.getWithDecoder(ctx, apiGetTorrentPiecesHashes, req, &rsp.Hashes, JsonDec); err != nil {
+		return nil, err
 	}
-	rsp.Exist = false
-	if q.is404Err(err) {
-		return rsp, nil
-	}
-	return nil, err
+	return rsp, nil
 }
 
 func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*PauseTorrentsRsp, error) {
