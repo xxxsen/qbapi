@@ -1,4 +1,4 @@
-module qpapi
+module github.com/xxxsen/qbapi
 
 go 1.15
 
