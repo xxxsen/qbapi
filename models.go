@@ -487,7 +487,7 @@ type TorrentPeerItem struct {
 	Ip          string  `json:"ip"`
 	Port        int     `json:"port"`
 	Progress    float64 `json:"progress"`
-	Relevance   int     `json:"relevance"`
+	Relevance   float64 `json:"relevance"`
 	UpSpeed     int     `json:"up_speed"`
 	Uploaded    int     `json:"uploaded"`
 }
