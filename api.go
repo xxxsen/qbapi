@@ -634,6 +634,7 @@ func (q *QBAPI) EditTrackers(ctx context.Context, req *EditTrackersReq) (*EditTr
 409	All urls were not found
 200	All other scenarios
 */
+//RemoveTrackers /api/v2/torrents/removeTrackers
 func (q *QBAPI) RemoveTrackers(ctx context.Context, req *RemoveTrackersReq) (*RemoveTrackersRsp, error) {
 	if len(req.Hash) == 0 || len(req.Url) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -652,6 +653,7 @@ func (q *QBAPI) RemoveTrackers(ctx context.Context, req *RemoveTrackersReq) (*Re
 400	None of the supplied peers are valid
 200	All other scenarios
 */
+//AddPeers /api/v2/torrents/addPeers
 func (q *QBAPI) AddPeers(ctx context.Context, req *AddPeersReq) (*AddPeersRsp, error) {
 	if len(req.Hash) == 0 || len(req.Peer) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -670,6 +672,7 @@ func (q *QBAPI) AddPeers(ctx context.Context, req *AddPeersReq) (*AddPeersRsp, e
 409	Torrent queueing is not enabled
 200	All other scenarios
 */
+//IncreaseTorrentPriority /api/v2/torrents/increasePrio
 func (q *QBAPI) IncreaseTorrentPriority(ctx context.Context, req *IncreaseTorrentPriorityReq) (*IncreaseTorrentPriorityRsp, error) {
 	if !req.IsIncreaseAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -690,6 +693,7 @@ func (q *QBAPI) IncreaseTorrentPriority(ctx context.Context, req *IncreaseTorren
 409	Torrent queueing is not enabled
 200	All other scenarios
 */
+//DecreaseTorrentPriority /api/v2/torrents/decreasePrio
 func (q *QBAPI) DecreaseTorrentPriority(ctx context.Context, req *DecreaseTorrentPriorityReq) (*DecreaseTorrentPriorityRsp, error) {
 	if !req.IsDecreaseAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -706,6 +710,7 @@ func (q *QBAPI) DecreaseTorrentPriority(ctx context.Context, req *DecreaseTorren
 	return &DecreaseTorrentPriorityRsp{}, nil
 }
 
+//MaximalTorrentPriority /api/v2/torrents/topPrio
 func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentPriorityReq) (*MaximalTorrentPriorityRsp, error) {
 	if !req.IsMaximalAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -722,6 +727,7 @@ func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentP
 	return &MaximalTorrentPriorityRsp{}, nil
 }
 
+//MinimalTorrentPriority /api/v2/torrents/bottomPrio
 func (q *QBAPI) MinimalTorrentPriority(ctx context.Context, req *MinimalTorrentPriorityReq) (*MinimalTorrentPriorityRsp, error) {
 	if !req.IsMinimalAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -746,6 +752,7 @@ func (q *QBAPI) MinimalTorrentPriority(ctx context.Context, req *MinimalTorrentP
 409	At least one file id was not found
 200	All other scenarios
 */
+//SetFilePriority /api/v2/torrents/filePrio
 func (q *QBAPI) SetFilePriority(ctx context.Context, req *SetFilePriorityReq) (*SetFilePriorityRsp, error) {
 	if len(req.Hash) == 0 || len(req.Id) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -761,6 +768,7 @@ func (q *QBAPI) SetFilePriority(ctx context.Context, req *SetFilePriorityReq) (*
 	return &SetFilePriorityRsp{}, nil
 }
 
+//GetTorrentDownloadLimit /api/v2/torrents/downloadLimit
 func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDownloadLimitReq) (*GetTorrentDownloadLimitRsp, error) {
 	if !req.IsGetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -776,6 +784,7 @@ func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDown
 	return rsp, nil
 }
 
+//SetTorrentDownloadLimit /api/v2/torrents/setDownloadLimit
 func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDownloadLimitReq) (*SetTorrentDownloadLimitRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -793,13 +802,15 @@ func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDown
 	return &SetTorrentDownloadLimitRsp{}, nil
 }
 
+//SetTorrentShareLimit /api/v2/torrents/setShareLimits
 func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLimitReq) (*SetTorrentShareLimitRsp, error) {
-	if !req.IsSetAll && len(req.Hash) == 0 {
+	if (!req.IsSetAll && len(req.Hash) == 0) || req.RatioLimit == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
 	innerReq := &setTorrentShareLimitInnerReq{
 		Hashes:           "all",
 		SeedingTimeLimit: req.SeedingTimeLimit,
+		RatioLimit:       req.RatioLimit,
 	}
 	if !req.IsSetAll {
 		innerReq.Hashes = strings.Join(req.Hash, "|")

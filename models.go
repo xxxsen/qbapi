@@ -926,11 +926,13 @@ type SetTorrentShareLimitReq struct {
 	IsSetAll         bool
 	Hash             []string
 	SeedingTimeLimit int
+	RatioLimit       float64
 }
 
 type setTorrentShareLimitInnerReq struct {
-	Hashes           string `json:"hashes"`
-	SeedingTimeLimit int    `json:"seedingTimeLimit"`
+	Hashes           string  `json:"hashes"`
+	SeedingTimeLimit int     `json:"seedingTimeLimit"`
+	RatioLimit       float64 `json:"ratioLimit"`
 }
 
 type SetTorrentShareLimitRsp struct {

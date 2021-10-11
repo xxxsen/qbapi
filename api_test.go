@@ -318,3 +318,77 @@ func TestRemoveTrackers(t *testing.T) {
 	})
 	assert.NoError(t, err)
 }
+
+func TestAddPeers(t *testing.T) {
+	_, err := testApi.AddPeers(context.Background(), &AddPeersReq{
+		Hash: []string{testCfg.ValidHash},
+		Peer: []string{"192.168.50.220:8000"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestIncreaseTorrentPriority(t *testing.T) {
+	_, err := testApi.IncreaseTorrentPriority(context.Background(), &IncreaseTorrentPriorityReq{
+		Hash:                 []string{testCfg.ValidHash},
+		IsIncreaseAllTorrent: false,
+	})
+	assert.NoError(t, err)
+}
+
+func TestDecreaseTorrentPriority(t *testing.T) {
+	_, err := testApi.DecreaseTorrentPriority(context.Background(), &DecreaseTorrentPriorityReq{
+		Hash:                 []string{testCfg.ValidHash},
+		IsDecreaseAllTorrent: false,
+	})
+	assert.NoError(t, err)
+}
+
+func TestMaximalTorrentPriority(t *testing.T) {
+	_, err := testApi.MaximalTorrentPriority(context.Background(), &MaximalTorrentPriorityReq{
+		Hash:                []string{testCfg.ValidHash},
+		IsMaximalAllTorrent: false,
+	})
+	assert.NoError(t, err)
+}
+
+func TestMinimalTorrentPriority(t *testing.T) {
+	_, err := testApi.MinimalTorrentPriority(context.Background(), &MinimalTorrentPriorityReq{
+		Hash:                []string{testCfg.ValidHash},
+		IsMinimalAllTorrent: false,
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetFilePriority(t *testing.T) {
+	_, err := testApi.SetFilePriority(context.Background(), &SetFilePriorityReq{
+		Hash:     testCfg.ValidHash,
+		Id:       []string{"4"},
+		Priority: FilePriorityMaximal,
+	})
+	assert.NoError(t, err)
+}
+
+func TestGetTorrentDownloadLimit(t *testing.T) {
+	rsp, err := testApi.GetTorrentDownloadLimit(context.Background(), &GetTorrentDownloadLimitReq{
+		Hash: []string{testCfg.ValidHash},
+	})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.SpeedMap)
+}
+
+func TestSetTorrentDownloadLimit(t *testing.T) {
+	_, err := testApi.SetTorrentDownloadLimit(context.Background(), &SetTorrentDownloadLimitReq{
+		Hash:  []string{testCfg.ValidHash},
+		Speed: 2 * 1024 * 1024,
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetTorrentShareLimit(t *testing.T) {
+	_, err := testApi.SetTorrentShareLimit(context.Background(), &SetTorrentShareLimitReq{
+		Hash:             []string{testCfg.ValidHash},
+		SeedingTimeLimit: 86400 * 7,
+		RatioLimit:       10,
+	})
+	assert.NoError(t, err)
+}
