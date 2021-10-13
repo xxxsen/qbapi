@@ -552,3 +552,11 @@ func TestRenameFolder(t *testing.T) {
 	})
 	assert.NoError(t, err)
 }
+
+func TestSetApplicationPreferences(t *testing.T) {
+	var dl int = 100 * 1024 * 1024
+	_, err := testApi.SetApplicationPreferences(context.Background(), &SetApplicationPreferencesReq{
+		DlLimit: &dl,
+	})
+	assert.NoError(t, err)
+}

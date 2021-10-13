@@ -3,6 +3,7 @@ package qbapi
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -234,14 +235,17 @@ func (q *QBAPI) GetApplicationPreferences(ctx context.Context, req *GetApplicati
 
 //SetApplicationPreferences /api/v2/app/setPreferences
 func (q *QBAPI) SetApplicationPreferences(ctx context.Context, req *SetApplicationPreferencesReq) (*SetApplicationPreferencesRsp, error) {
-	//TODO:
-	return nil, fmt.Errorf("not impl")
-	// rsp := &SetApplicationPreferencesRsp{}
-	// err := q.postWithDecoder(apiSetAPPPref, req, rsp, JsonDec)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return rsp, nil
+	js, err := json.Marshal(req)
+	if err != nil {
+		return nil, NewError(ErrMarsal, err)
+	}
+	innerReq := &setApplicationPreferencesInnerReq{
+		Json: string(js),
+	}
+	if err := q.postWithDecoder(ctx, apiSetAPPPref, innerReq, nil, JsonDec); err != nil {
+		return nil, err
+	}
+	return &SetApplicationPreferencesRsp{}, nil
 }
 
 //GetDefaultSavePath /api/v2/app/defaultSavePath
