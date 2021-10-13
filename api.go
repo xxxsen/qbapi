@@ -821,6 +821,7 @@ func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLi
 	return &SetTorrentShareLimitRsp{}, nil
 }
 
+//GetTorrentUploadLimit /api/v2/torrents/uploadLimit
 func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUploadLimitReq) (*GetTorrentUploadLimitRsp, error) {
 	if !req.IsGetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -838,6 +839,7 @@ func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUpload
 	return rsp, nil
 }
 
+//SetTorrentUploadLimit /api/v2/torrents/setUploadLimit
 func (q *QBAPI) SetTorrentUploadLimit(ctx context.Context, req *SetTorrentUploadLimitReq) (*SetTorrentUploadLimitRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -861,6 +863,7 @@ func (q *QBAPI) SetTorrentUploadLimit(ctx context.Context, req *SetTorrentUpload
 409	Unable to create save path directory
 200	All other scenarios
 */
+//SetTorrentLocation /api/v2/torrents/setLocation
 func (q *QBAPI) SetTorrentLocation(ctx context.Context, req *SetTorrentLocationReq) (*SetTorrentLocationRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -883,6 +886,7 @@ func (q *QBAPI) SetTorrentLocation(ctx context.Context, req *SetTorrentLocationR
 409	Torrent name is empty
 200	All other scenarios
 */
+//SetTorrentName /api/v2/torrents/rename
 func (q *QBAPI) SetTorrentName(ctx context.Context, req *SetTorrentNameReq) (*SetTorrentNameRsp, error) {
 	if len(req.Hash) == 0 || len(req.Name) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -897,6 +901,7 @@ func (q *QBAPI) SetTorrentName(ctx context.Context, req *SetTorrentNameReq) (*Se
 409	Category name does not exist
 200	All other scenarios
 */
+//SetTorrentCategory /api/v2/torrents/setCategory
 func (q *QBAPI) SetTorrentCategory(ctx context.Context, req *SetTorrentCategoryReq) (*SetTorrentCategoryRsp, error) {
 	if len(req.Category) == 0 || (!req.IsSetAll && len(req.Hash) == 0) {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -914,6 +919,7 @@ func (q *QBAPI) SetTorrentCategory(ctx context.Context, req *SetTorrentCategoryR
 	return &SetTorrentCategoryRsp{}, nil
 }
 
+//GetAllCategories /api/v2/torrents/categories
 func (q *QBAPI) GetAllCategories(ctx context.Context, req *GetAllCategoriesReq) (*GetAllCategoriesRsp, error) {
 	rsp := &GetAllCategoriesRsp{Categories: make(map[string]*CategoryInfo)}
 	if err := q.getWithDecoder(ctx, apiGetAllCategories, req, &rsp.Categories, JsonDec); err != nil {
@@ -927,8 +933,9 @@ func (q *QBAPI) GetAllCategories(ctx context.Context, req *GetAllCategoriesReq) 
 409	Category name is invalid
 200	All other scenarios
 */
+//AddNewCategory /api/v2/torrents/createCategory
 func (q *QBAPI) AddNewCategory(ctx context.Context, req *AddNewCategoryReq) (*AddNewCategoryRsp, error) {
-	if len(req.Category) == 0 || len(req.SavePath) == 0 {
+	if len(req.Category) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
 	if err := q.postWithDecoder(ctx, apiAddNewCategory, req, nil, JsonDec); err != nil {
@@ -942,6 +949,7 @@ func (q *QBAPI) AddNewCategory(ctx context.Context, req *AddNewCategoryReq) (*Ad
 409	Category editing failed
 200	All other scenarios
 */
+//EditCategory /api/v2/torrents/editCategory
 func (q *QBAPI) EditCategory(ctx context.Context, req *EditCategoryReq) (*EditCategoryRsp, error) {
 	if len(req.Category) == 0 || len(req.SavePath) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -952,6 +960,7 @@ func (q *QBAPI) EditCategory(ctx context.Context, req *EditCategoryReq) (*EditCa
 	return &EditCategoryRsp{}, nil
 }
 
+//RemoveCategories /api/v2/torrents/removeCategories
 func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) (*RemoveCategoriesRsp, error) {
 	if len(req.Category) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -965,6 +974,7 @@ func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) 
 	return &RemoveCategoriesRsp{}, nil
 }
 
+//AddTorrentTags /api/v2/torrents/addTags
 func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*AddTorrentTagsRsp, error) {
 	if len(req.Tag) == 0 || (!req.IsAddAll && len(req.Hash) == 0) {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -982,6 +992,7 @@ func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*Ad
 	return &AddTorrentTagsRsp{}, nil
 }
 
+//RemoveTorrentTags /api/v2/torrents/removeTags
 func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq) (*RemoveTorrentTagsRsp, error) {
 	if len(req.Tag) == 0 || (!req.IsRemoveAll && len(req.Hash) == 0) {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -999,6 +1010,7 @@ func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq
 	return &RemoveTorrentTagsRsp{}, nil
 }
 
+//GetAllTags /api/v2/torrents/tags
 func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTagsRsp, error) {
 	rsp := &GetAllTagsRsp{Tags: make([]string, 0)}
 	if err := q.getWithDecoder(ctx, apiGetAllTags, req, &rsp.Tags, JsonDec); err != nil {
@@ -1007,6 +1019,7 @@ func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTags
 	return rsp, nil
 }
 
+//CreateTags /api/v2/torrents/createTags
 func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTagsRsp, error) {
 	if len(req.Tag) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1020,6 +1033,7 @@ func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTags
 	return &CreateTagsRsp{}, nil
 }
 
+//DeleteTags /api/v2/torrents/deleteTags
 func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTagsRsp, error) {
 	if len(req.Tag) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1034,6 +1048,7 @@ func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTags
 
 }
 
+//SetAutomaticTorrentManagement /api/v2/torrents/setAutoManagement
 func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutomaticTorrentManagementReq) (*SetAutomaticTorrentManagementRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1051,6 +1066,7 @@ func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutom
 	return &SetAutomaticTorrentManagementRsp{}, nil
 }
 
+//ToggleSequentialDownload /api/v2/torrents/toggleSequentialDownload
 func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequentialDownloadReq) (*ToggleSequentialDownloadRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1067,6 +1083,7 @@ func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequent
 	return &ToggleSequentialDownloadRsp{}, nil
 }
 
+//SetFirstOrLastPiecePriority /api/v2/torrents/toggleFirstLastPiecePrio
 func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOrLastPiecePriorityReq) (*SetFirstOrLastPiecePriorityRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1083,6 +1100,7 @@ func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOr
 	return &SetFirstOrLastPiecePriorityRsp{}, nil
 }
 
+//SetForceStart /api/v2/torrents/setForceStart
 func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetForceStartRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1100,6 +1118,7 @@ func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetF
 	return &SetForceStartRsp{}, nil
 }
 
+//SetSuperSeeding /api/v2/torrents/setSuperSeeding
 func (q *QBAPI) SetSuperSeeding(ctx context.Context, req *SetSuperSeedingReq) (*SetSuperSeedingRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1122,8 +1141,9 @@ func (q *QBAPI) SetSuperSeeding(ctx context.Context, req *SetSuperSeedingReq) (*
 409	Invalid newPath or oldPath, or newPath already in use
 200	All other scenarios
 */
+//RenameFile /api/v2/torrents/renameFile
 func (q *QBAPI) RenameFile(ctx context.Context, req *RenameFileReq) (*RenameFileRsp, error) {
-	if len(req.Hash) == 0 || len(req.OldPath) == 0 || len(req.NewPath) == 0 {
+	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
 	if err := q.postWithDecoder(ctx, apiRenameFile, req, nil, JsonDec); err != nil {
@@ -1132,8 +1152,9 @@ func (q *QBAPI) RenameFile(ctx context.Context, req *RenameFileReq) (*RenameFile
 	return &RenameFileRsp{}, nil
 }
 
+//RenameFolder /api/v2/torrents/renameFolder
 func (q *QBAPI) RenameFolder(ctx context.Context, req *RenameFolderReq) (*RenameFolderRsp, error) {
-	if len(req.Hash) == 0 || len(req.OldPath) == 0 || len(req.NewPath) == 0 {
+	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
 	}
 	if err := q.postWithDecoder(ctx, apiRenameFolder, req, nil, JsonDec); err != nil {

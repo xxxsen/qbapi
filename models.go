@@ -1143,7 +1143,7 @@ type SetForceStartReq struct {
 
 type setForceStartInnerReq struct {
 	Hashes string `json:"hashes"`
-	Value  bool   `json:"bool"`
+	Value  bool   `json:"value"`
 }
 
 type SetForceStartRsp struct {
@@ -1157,7 +1157,7 @@ type SetSuperSeedingReq struct {
 
 type setSuperSeedingInnerReq struct {
 	Hashes string `json:"hashes"`
-	Value  bool   `json:"bool"`
+	Value  bool   `json:"value"`
 }
 
 type SetSuperSeedingRsp struct {

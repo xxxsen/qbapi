@@ -392,3 +392,163 @@ func TestSetTorrentShareLimit(t *testing.T) {
 	})
 	assert.NoError(t, err)
 }
+
+func TestGetTorrentUploadLimit(t *testing.T) {
+	rsp, err := testApi.GetTorrentUploadLimit(context.Background(), &GetTorrentUploadLimitReq{
+		Hash: []string{testCfg.ValidHash},
+	})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.SpeedMap)
+}
+
+func TestSetTorrentUploadLimit(t *testing.T) {
+	_, err := testApi.SetTorrentUploadLimit(context.Background(), &SetTorrentUploadLimitReq{
+		Hash:  []string{testCfg.ValidHash},
+		Speed: 300 * 1024,
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetTorrentLocation(t *testing.T) {
+	_, err := testApi.SetTorrentLocation(context.Background(), &SetTorrentLocationReq{
+		Hash:     []string{testCfg.ValidHash},
+		Location: "abc",
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetTorrentName(t *testing.T) {
+	_, err := testApi.SetTorrentName(context.Background(), &SetTorrentNameReq{
+		Hash: testCfg.ValidHash,
+		Name: "abc",
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetTorrentCategory(t *testing.T) {
+	_, err := testApi.SetTorrentCategory(context.Background(), &SetTorrentCategoryReq{
+		Hash:     []string{testCfg.ValidHash},
+		Category: "电影",
+	})
+	assert.NoError(t, err)
+}
+
+func TestGetAllCategories(t *testing.T) {
+	rsp, err := testApi.GetAllCategories(context.Background(), &GetAllCategoriesReq{})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.Categories)
+}
+
+func TestAddNewCategory(t *testing.T) {
+	_, err := testApi.AddNewCategory(context.Background(), &AddNewCategoryReq{
+		Category: "abc",
+		SavePath: "",
+	})
+	assert.NoError(t, err)
+}
+
+func TestEditCategory(t *testing.T) {
+	_, err := testApi.EditCategory(context.Background(), &EditCategoryReq{
+		Category: "abc",
+		SavePath: "/123",
+	})
+	assert.NoError(t, err)
+}
+
+func TestRemoveCategories(t *testing.T) {
+	_, err := testApi.RemoveCategories(context.Background(), &RemoveCategoriesReq{
+		Category: []string{"abc"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestAddTorrentTags(t *testing.T) {
+	_, err := testApi.AddTorrentTags(context.Background(), &AddTorrentTagsReq{
+		Hash: []string{testCfg.ValidHash},
+		Tag:  []string{"1", "2", "a", "b"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestRemoveTorrentTags(t *testing.T) {
+	_, err := testApi.RemoveTorrentTags(context.Background(), &RemoveTorrentTagsReq{
+		Hash: []string{testCfg.ValidHash},
+		Tag:  []string{"1", "a"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestGetAllTags(t *testing.T) {
+	rsp, err := testApi.GetAllTags(context.Background(), &GetAllTagsReq{})
+	assert.NoError(t, err)
+	t.Logf("data:%+v", rsp.Tags)
+}
+
+func TestCreateTags(t *testing.T) {
+	_, err := testApi.CreateTags(context.Background(), &CreateTagsReq{
+		Tag: []string{"aa", "bvb"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestDeleteTags(t *testing.T) {
+	_, err := testApi.DeleteTags(context.Background(), &DeleteTagsReq{
+		Tag: []string{"aa", "bvb"},
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetAutomaticTorrentManagement(t *testing.T) {
+	_, err := testApi.SetAutomaticTorrentManagement(context.Background(), &SetAutomaticTorrentManagementReq{
+		Hash: []string{testCfg.ValidHash},
+	})
+	assert.NoError(t, err)
+}
+
+func TestToggleSequentialDownload(t *testing.T) {
+	_, err := testApi.ToggleSequentialDownload(context.Background(), &ToggleSequentialDownloadReq{
+		Hash: []string{testCfg.ValidHash},
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetFirstOrLastPiecePriority(t *testing.T) {
+	_, err := testApi.SetFirstOrLastPiecePriority(context.Background(), &SetFirstOrLastPiecePriorityReq{
+		Hash: []string{testCfg.ValidHash},
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetForceStart(t *testing.T) {
+	_, err := testApi.SetForceStart(context.Background(), &SetForceStartReq{
+		Hash:  []string{testCfg.ValidHash},
+		Value: true,
+	})
+	assert.NoError(t, err)
+}
+
+func TestSetSuperSeeding(t *testing.T) {
+	_, err := testApi.SetSuperSeeding(context.Background(), &SetSuperSeedingReq{
+		Hash:  []string{testCfg.ValidHash},
+		Value: true,
+	})
+	assert.NoError(t, err)
+}
+
+func TestRenameFile(t *testing.T) {
+	_, err := testApi.RenameFile(context.Background(), &RenameFileReq{
+		Hash:    testCfg.ValidHash,
+		OldPath: "abc",
+		NewPath: "abcd",
+	})
+	assert.NoError(t, err)
+}
+
+func TestRenameFolder(t *testing.T) {
+	_, err := testApi.RenameFolder(context.Background(), &RenameFolderReq{
+		Hash:    testCfg.ValidHash,
+		OldPath: "/downloads/",
+		NewPath: "downloads2",
+	})
+	assert.NoError(t, err)
+}
