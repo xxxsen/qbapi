@@ -3,7 +3,7 @@ package qbapi
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ var testCfg = getCfg()
 var testApi = getAPI()
 
 func getCfg() *cfg {
-	data, err := ioutil.ReadFile(".vscode/cfg.json")
+	data, err := os.ReadFile(".vscode/cfg.json")
 	if err != nil {
 		panic(err)
 	}
