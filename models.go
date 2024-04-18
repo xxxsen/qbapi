@@ -495,7 +495,6 @@ type TorrentPeerItem struct {
 	UpSpeed      int     `json:"up_speed"`
 	Uploaded     int     `json:"uploaded"`
 	PeerIdClient string  `json:"peer_id_client"`
-	//TODO: add field here
 }
 
 type TorrentPeerData struct {
