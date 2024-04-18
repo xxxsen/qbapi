@@ -479,21 +479,23 @@ type GetTorrentPeerDataReq struct {
 }
 
 type TorrentPeerItem struct {
-	Client      string  `json:"client"`
-	Connection  string  `json:"connection"`
-	Country     string  `json:"country"`
-	CountryCode string  `json:"country_code"`
-	DlSpeed     int     `json:"dl_speed"`
-	Downloaded  int     `json:"downloaded"`
-	Files       string  `json:"files"`
-	Flags       string  `json:"flags"`
-	FlagsDesc   string  `json:"flags_desc"`
-	Ip          string  `json:"ip"`
-	Port        int     `json:"port"`
-	Progress    float64 `json:"progress"`
-	Relevance   float64 `json:"relevance"`
-	UpSpeed     int     `json:"up_speed"`
-	Uploaded    int     `json:"uploaded"`
+	Client       string  `json:"client"`
+	Connection   string  `json:"connection"`
+	Country      string  `json:"country"`
+	CountryCode  string  `json:"country_code"`
+	DlSpeed      int     `json:"dl_speed"`
+	Downloaded   int     `json:"downloaded"`
+	Files        string  `json:"files"`
+	Flags        string  `json:"flags"`
+	FlagsDesc    string  `json:"flags_desc"`
+	Ip           string  `json:"ip"`
+	Port         int     `json:"port"`
+	Progress     float64 `json:"progress"`
+	Relevance    float64 `json:"relevance"`
+	UpSpeed      int     `json:"up_speed"`
+	Uploaded     int     `json:"uploaded"`
+	PeerIdClient string  `json:"peer_id_client"`
+	//TODO: add field here
 }
 
 type TorrentPeerData struct {
@@ -625,7 +627,7 @@ type GetTorrentTrackersReq struct {
 	Hash string `json:"hash"`
 }
 
-//Note: tier should be integer, but in some trackers, it returns empty string
+// Note: tier should be integer, but in some trackers, it returns empty string
 type TorrentTrackerItem struct {
 	Url           string      `json:"url"`            //Tracker url
 	Status        int         `json:"status"`         //Tracker status. See the table below for possible values
